@@ -10,17 +10,17 @@ Date: 2026
 
 ## Table of Contents
 
-- 1. Introduction
-- 2. STDD in a Real Development Workflow
-- 3. Typical Repository Structure
-- 4. Writing Specifications
-- 5. Writing Behavioral Tests
-- 6. Using AI to Generate Implementations
-- 7. Continuous Integration with STDD
-- 8. Regeneration in Practice
-- 9. Team Roles in STDD
-- 10. Example Development Cycle
-- 11. Conclusion
+1. Introduction
+2. STDD in a Real Development Workflow
+3. Typical Repository Structure
+4. Writing Specifications
+5. Writing Behavioral Tests
+6. Using AI to Generate Implementations
+7. Continuous Integration with STDD
+8. Regeneration in Practice
+9. Team Roles in STDD
+10. Example Development Cycle
+11. Conclusion
 
 ---
 
@@ -73,21 +73,30 @@ An STDD project benefits from a clear repository structure.
 Example:
 
 project
+```
+features
 │
-├─ specifications
-│   └─ cart_total.md
-│
-├─ tests
-│   └─ test_cart_total.py
-│
-├─ src
-│   └─ implementation.py
-│
-├─ ci
-│   └─ pipeline.yml
-│
-└─ README.md
+└── cart_total
+    ├── specification.md
+    ├── scenarios.md
+    ├── invariants.md
+    └── acceptance_cases.yaml
 
+implementations
+│
+└── cart_total
+    ├── python
+    │   ├── src
+    │   └── tests
+    │
+    ├── go
+    │   ├── src
+    │   └── tests
+    │
+    └── java
+        ├── src
+        └── tests
+```
 Specifications define behavior.
 
 Tests enforce behavior.
