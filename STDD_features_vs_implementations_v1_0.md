@@ -204,7 +204,7 @@ Both implementations verify the same behavior.
 # 8. Recommended Repository Structure
 
 A practical STDD repository structure might look like this:
-
+```
 features
 │
 └── cart_total
@@ -227,7 +227,7 @@ implementations
     └── java
         ├── src
         └── tests
-
+```
 This clearly separates **behavior definition** from **implementation**.
 
 ---
