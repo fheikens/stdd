@@ -125,6 +125,6 @@ By storing the knowledge layer in Git, organizations gain:
 
 ---
 
-For guidance on writing the specifications that form the knowledge layer, see **Writing Specifications in STDD**.
+For guidance on writing the specifications that form the knowledge layer, see [Writing Specifications](writing-specifications.md).
 
-For non‑functional quality constraints that must be versioned alongside specifications, see **STDD Non‑Functional Requirements Framework**.
+For non‑functional quality constraints that must be versioned alongside specifications, see [NFR Framework](nfr-framework.md).

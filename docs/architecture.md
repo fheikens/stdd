@@ -278,6 +278,6 @@ Specifications and tests remain the ultimate source of truth.
 
 ---
 
-For guidance on writing the specifications that drive these architectures, see **Writing Specifications in STDD**.
+For guidance on writing the specifications that drive these architectures, see [Writing Specifications](writing-specifications.md).
 
-For non‑functional quality constraints that architectures must enforce, see **STDD Non‑Functional Requirements Framework**.
+For non‑functional quality constraints that architectures must enforce, see [NFR Framework](nfr-framework.md).

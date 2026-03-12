@@ -1,24 +1,43 @@
 
-# STDD
-## Specification & Test-Driven Development
+# STDD — Specification & Test-Driven Development
 
-A methodology for building stable software in the age of AI-generated code.
+A software engineering methodology for the AI era.
 
-STDD shifts the focus of software engineering from **implementation** to **behavior**.
-
-Instead of treating code as the core artifact, STDD defines systems using:
-
-- specifications
-- expected behavior
-- executable tests
-
-AI generates the implementation.
-
-Tests guarantee the behavior.
+Author: Frank Heikens
 
 ---
 
-# STDD Development Loop
+## The Core Idea
+
+**Code is disposable. Behavior is permanent.**
+
+STDD defines systems using specifications and tests. AI generates the implementation. If the implementation becomes outdated, complex, or broken, it is discarded and regenerated. The specifications and tests remain.
+
+This is the **regeneration model**: code is deliberately disposable because the specification and test layers are strong enough to verify any new implementation from scratch.
+
+---
+
+## The Manifesto
+
+- Specifications define intent.
+- Tests verify behavior.
+- Together, specifications and tests define the system.
+- Implementations are replaceable artifacts.
+
+Read the full [Manifesto](manifesto.md).
+
+---
+
+## How It Works
+
+```
+1. Define the specification
+2. Define the expected behavior
+3. Write tests that verify the behavior
+4. Generate implementation with AI
+5. Run the tests
+6. Pass → accept. Fail → regenerate.
+```
 
 ```mermaid
 flowchart TD
@@ -42,100 +61,81 @@ F -- No --> H
 H --> D
 ```
 
-Diagram source:  
-`/diagrams/stdd_development_loop.md`
+---
+
+## Reading Guide
+
+Start with the manifesto and method. Then go deeper based on your role.
+
+### Philosophy
+
+| Document | Description |
+|----------|-------------|
+| [Manifesto](manifesto.md) | Why STDD exists and what it stands for |
+
+### Core Methodology
+
+| Document | Description |
+|----------|-------------|
+| [Method](docs/method.md) | The STDD workflow — how it works in practice |
+| [Writing Specifications](docs/writing-specifications.md) | How to write precise, testable specifications |
+| [Architecture](docs/architecture.md) | Designing systems for safe regeneration |
+| [NFR Framework](docs/nfr-framework.md) | Non-functional requirements as testable constraints |
+| [Engineering Playbook](docs/engineering-playbook.md) | Applying STDD in real projects |
+| [Versioning the Knowledge Layer](docs/versioning-the-knowledge-layer.md) | Version control for specifications and tests |
+| [Features vs Implementations](docs/features-vs-implementations.md) | Language independence in STDD |
+
+### Reference
+
+| Document | Description |
+|----------|-------------|
+| [Anti-Patterns](reference/anti-patterns.md) | Common mistakes and how to avoid them |
+| [STDD vs Existing Methods](reference/vs-existing-methods.md) | Comparison with TDD, BDD, and other approaches |
+| [Why AI Needs STDD](reference/why-ai-needs-stdd.md) | The case for behavioral stability in AI-generated systems |
+
+### Examples
+
+| Document | Description |
+|----------|-------------|
+| [Worked Examples](examples/examples.md) | Practical STDD development examples |
 
 ---
 
-# Traditional Development vs STDD
-
-```mermaid
-flowchart LR
-
-subgraph Traditional Development
-A1[Design]
-B1[Write Code]
-C1[Write Tests]
-D1[Fix Bugs]
-end
-
-subgraph STDD
-A2[Specification]
-B2[Behavior]
-C2[Tests]
-D2[AI Implementation]
-E2[Verification]
-end
-
-A1 --> B1 --> C1 --> D1
-A2 --> B2 --> C2 --> D2 --> E2
-```
-
-Diagram source:  
-`/diagrams/stdd_vs_traditional.md`
-
----
-
-# Core Idea
-
-**Code becomes disposable. Behavior becomes permanent.**
-
-STDD builds on TDD and BDD. Its central innovation is the **regeneration model**: implementations are deliberately disposable because the specification and test layers are strong enough to verify any new implementation from scratch.
-
-Regeneration is a normal operation, not an emergency measure. When code becomes complex, inefficient, or outdated, it is discarded and regenerated. The specification and tests remain.
-
-The specification defines what must happen. The tests verify that behavior. AI generates implementations that satisfy those tests. If an implementation is discarded, the knowledge layer remains intact and a new implementation can be generated and verified immediately.
-
----
-
-# Core Documents
-
-- **Manifesto** – Philosophy behind STDD
-- **Method** – How STDD works in practice
-- **Writing Specifications** – How to write precise, testable specifications
-- **Architecture** – Designing systems for safe regeneration
-- **Examples** – Practical STDD development examples
-- **Anti-Patterns** – Common mistakes to avoid
-- **STDD vs Existing Methods** – Comparison with other approaches
-- **Why AI Coding Needs STDD** – Stability in AI-generated systems
-- **NFR Framework** – Non-functional requirements as testable constraints
-- **Engineering Playbook** – Applying STDD in real projects
-- **Features vs Implementations** – Language independence in STDD
-- **Versioning the Knowledge Layer** – Version control for specifications and tests
-
----
-
-# Repository Structure
-
-Example layout:
+## Repository Structure
 
 ```
-stdd
+stdd/
+├── README.md
+├── manifesto.md
 │
-├─ README.md
-├─ STDD_method_v1_0.md
-├─ STDD_writing_specifications_v1_0.md
-├─ STDD_architecture_v1_0.md
-├─ STDD_examples_v1_0.md
-├─ STDD_antipatterns_v1_0.md
-├─ STDD_vs_existing_methods_v1_0.md
-├─ STDD_why_ai_needs_stdd_v1_0.md
-├─ STDD_nfr_framework_v1_0.md
-├─ STDD_engineering_playbook_v1_0.md
-├─ STDD_features_vs_implementations_v1_0.md
-├─ STDD_versioning_the_knowledge_layer_v1_0.md
+├── docs/
+│   ├── method.md
+│   ├── writing-specifications.md
+│   ├── architecture.md
+│   ├── nfr-framework.md
+│   ├── engineering-playbook.md
+│   ├── versioning-the-knowledge-layer.md
+│   └── features-vs-implementations.md
 │
-└─ diagrams
-    ├─ stdd_development_loop.md
-    ├─ stdd_control_loop.md
-    ├─ stdd_vs_traditional.md
-    ├─ stdd_architecture_layers.md
-    └─ stdd_regeneration_model.md
+├── reference/
+│   ├── anti-patterns.md
+│   ├── vs-existing-methods.md
+│   └── why-ai-needs-stdd.md
+│
+├── examples/
+│   └── examples.md
+│
+└── diagrams/
+    ├── stdd_development_loop.md
+    ├── stdd_control_loop.md
+    ├── stdd_vs_traditional.md
+    ├── stdd_architecture_layers.md
+    └── stdd_regeneration_model.md
 ```
 
 ---
 
-# License
+## License
 
 Licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
 

@@ -189,7 +189,7 @@ Specifications define:
 
 The specification defines **what must happen**, not **how it should be implemented**.
 
-A complete specification includes behavioral scenarios, invariants, failure conditions, and structured acceptance cases. For detailed guidance on writing specifications, see **Writing Specifications in STDD**.
+A complete specification includes behavioral scenarios, invariants, failure conditions, and structured acceptance cases. For detailed guidance on writing specifications, see [Writing Specifications](writing-specifications.md).
 
 ---
 
@@ -227,7 +227,7 @@ This test defines the expected behavior.
 
 Any implementation must satisfy this test.
 
-The translation from specification to tests is a critical step. Every scenario, invariant, and failure condition in the specification must be covered by at least one test. A traceability matrix, generated tests from acceptance cases, and property-based invariant tests help close this gap. For detailed strategies, see **Writing Specifications in STDD**, Section 13.
+The translation from specification to tests is a critical step. Every scenario, invariant, and failure condition in the specification must be covered by at least one test. A traceability matrix, generated tests from acceptance cases, and property-based invariant tests help close this gap. For detailed strategies, see [Writing Specifications](writing-specifications.md), Section 13.
 
 ---
 
@@ -367,4 +367,4 @@ STDD turns AI from a risk into a controlled engineering tool.
 
 For the philosophy behind STDD see:
 
-**The STDD Manifesto**
+[The STDD Manifesto](../manifesto.md)

@@ -38,7 +38,7 @@ The examples are intentionally simple.
 
 The goal is not to show advanced software engineering, but to show how STDD turns behavior into the stable center of development.
 
-Each example includes a structured specification following the format described in **Writing Specifications in STDD**.
+Each example includes a structured specification following the format described in [Writing Specifications](../docs/writing-specifications.md).
 
 ---
 

@@ -92,7 +92,7 @@ Ambiguity leads to unstable implementations and failing tests.
 
 STDD requires **explicit behavior definitions**.
 
-For detailed guidance on eliminating ambiguity, see **Writing Specifications in STDD**.
+For detailed guidance on eliminating ambiguity, see [Writing Specifications](../docs/writing-specifications.md).
 
 ---
 
@@ -265,7 +265,7 @@ To avoid this:
 - Use property-based tests to verify invariants across many inputs.
 - Review the specification and test suite together, not separately.
 
-For detailed strategies on closing this gap, see **Writing Specifications in STDD**, Section 13.
+For detailed strategies on closing this gap, see [Writing Specifications](../docs/writing-specifications.md), Section 13.
 
 ---
 

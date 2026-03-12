@@ -561,4 +561,4 @@ Tests verify both.**
 
 ---
 
-For guidance on writing the specifications that declare technology and domain context, see **Writing Specifications in STDD**.
+For guidance on writing the specifications that declare technology and domain context, see [Writing Specifications](writing-specifications.md).

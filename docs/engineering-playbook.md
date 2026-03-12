@@ -174,7 +174,7 @@ Scenario: Zero tax rate
 - Tax rate outside 0-1 range: rejected with validation error.
 ```
 
-For comprehensive guidance on writing specifications, see **Writing Specifications in STDD**.
+For comprehensive guidance on writing specifications, see [Writing Specifications](writing-specifications.md).
 
 ---
 

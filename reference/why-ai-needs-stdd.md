@@ -241,6 +241,6 @@ STDD allows engineering teams to harness AI safely while maintaining reliable so
 
 ---
 
-For practical guidance on writing the specifications that drive this process, see **Writing Specifications in STDD**.
+For practical guidance on writing the specifications that drive this process, see [Writing Specifications](../docs/writing-specifications.md).
 
-For non‑functional quality constraints that prevent AI from generating insecure or unreliable code, see **STDD Non‑Functional Requirements Framework**.
+For non‑functional quality constraints that prevent AI from generating insecure or unreliable code, see [NFR Framework](../docs/nfr-framework.md).
