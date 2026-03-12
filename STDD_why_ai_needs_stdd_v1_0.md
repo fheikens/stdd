@@ -90,19 +90,19 @@ Without clear behavioral definitions, the generated implementation becomes the a
 
 # 4. Why Traditional Practices Are Not Enough
 
-Traditional development assumes that humans carefully design and implement systems.
+Traditional development assumes that humans carefully design and implement systems. Code evolves slowly. Developers understand the system deeply. Refactoring happens incrementally.
 
-In that model:
+Test‑Driven Development improved this by placing tests before implementation. TDD is valuable and its core idea carries forward into STDD.
 
-- code evolves slowly
-- developers understand the system deeply
-- refactoring happens incrementally
+However, TDD assumes code is an asset to maintain. It improves code through incremental refactoring. The implementation accumulates history and context over time.
 
-AI changes these assumptions.
+AI changes this assumption. When code can be generated and regenerated instantly, incremental maintenance becomes less important than the ability to **safely discard and regenerate** entire implementations.
 
-When code can be generated instantly, the bottleneck becomes **clarity of behavior**.
+This requires something TDD does not provide: a specification layer above the tests that captures invariants, failure conditions, acceptance cases, and constraints. Test suites verify specific inputs and outputs. They do not capture the full intent of the system.
 
-Traditional workflows struggle because they rely heavily on manual control of the implementation.
+Without this specification layer, regeneration is dangerous. A regenerated implementation might pass all existing tests while violating unstated assumptions.
+
+STDD addresses this by adding the specification layer that makes regeneration safe.
 
 ---
 

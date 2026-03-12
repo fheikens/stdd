@@ -67,21 +67,35 @@ Typical TDD workflow:
 
 TDD focuses on improving design and preventing regressions.
 
-### Similarities
+STDD builds directly on TDD. It inherits the core idea that tests come before implementation. This is not a difference. It is a shared foundation.
 
-- Both define tests before implementation
-- Both treat tests as a core artifact
-- Both emphasize behavioral verification
+### What STDD Shares with TDD
 
-### Differences
+- Tests are written before implementation
+- Tests are a core artifact
+- Behavioral verification drives development
 
-TDD assumes that **developers write the implementation**.
+### What STDD Adds
 
-STDD assumes that **AI generates the implementation**.
+The question "who writes the implementation" (human vs AI) is an operational change, not a deep methodological one. TDD works regardless of who or what produces the code.
 
-Because implementations can be regenerated instantly, STDD treats code as **disposable**.
+The genuine difference is the **regeneration model**.
 
-The specification and tests become the permanent artifacts.
+In TDD, code is written incrementally and maintained over time. Refactoring improves existing code. The implementation accumulates history, context, and implicit knowledge. Developers become attached to the code because it represents significant investment.
+
+In STDD, code is **deliberately disposable**. Implementations are not maintained. They are discarded and regenerated. This changes the relationship between the team and the codebase in a fundamental way.
+
+This shift requires something TDD does not provide: a **specification layer above the tests**.
+
+TDD tests verify behavior, but they do not capture the full intent of the system. A test suite can tell you that `calculate_total([10, 20], 0.10)` must equal `33`. It cannot tell you why, what the business rules are, what the edge cases should be, or what invariants must hold across all scenarios.
+
+STDD adds this specification layer: behavioral scenarios, invariants, acceptance cases, failure conditions, and constraints. Together with the tests, these form a **knowledge layer** that is strong enough to safely regenerate any implementation from scratch.
+
+### Summary
+
+TDD gave us: tests before code.
+
+STDD adds: a specification layer that makes code safely disposable through regeneration.
 
 ---
 
@@ -208,33 +222,34 @@ This ensures that AI remains a controlled tool rather than an uncontrolled gener
 
 # 8. Where STDD Fits
 
-STDD can be seen as the natural evolution of several ideas:
+STDD builds on ideas that already exist in software engineering.
 
-- TDD provided the importance of tests
-- BDD emphasized behavior
-- Clean Architecture defined system structure
-- AI coding tools accelerated implementation
+- TDD established that tests come before code
+- BDD established that behavior matters more than implementation details
+- Clean Architecture established structural discipline for testable systems
 
-STDD combines these ideas into a workflow designed for an AI‑assisted development environment.
+STDD does not claim to invent these ideas. It inherits them.
 
-It focuses on a single principle:
+What STDD adds is the **regeneration model**: a development workflow where implementations are deliberately disposable because the specification and test layers are strong enough to verify any new implementation from scratch.
 
-**Behavior must remain stable even when implementations change.**
+This requires two things that previous methods did not emphasize:
+
+1. A **specification layer** above the tests that captures invariants, failure conditions, acceptance cases, and constraints. This layer makes it safe to regenerate rather than refactor.
+
+2. A **regeneration loop** where discarding and regenerating implementations is a normal operation, not an emergency measure.
+
+The combination of these ideas creates a workflow designed for an environment where AI can generate code instantly but cannot guarantee long‑term stability on its own.
 
 ---
 
 # 9. Conclusion
 
-STDD does not replace existing engineering practices.
+STDD does not replace existing engineering practices. It builds on them.
 
-Instead, it extends them for a world where code generation is no longer the bottleneck.
+TDD, BDD, and Clean Architecture remain valuable foundations. STDD inherits their core ideas and extends them with the **regeneration model**: a specification layer and a regeneration loop that together make implementations safely disposable.
 
-By combining:
+This is not simply "TDD with AI." The ability to discard and regenerate code at will changes the relationship between the team and the codebase. Code is no longer an asset to protect. It is an output to verify.
 
-- precise specifications
-- executable tests
-- controlled AI generation
+The specification and tests become the permanent artifacts. The implementation is temporary.
 
-STDD allows systems to evolve safely while maintaining stable behavior.
-
-This makes it particularly well suited for modern software development where AI is increasingly responsible for generating large portions of code.
+This makes STDD particularly well suited for modern software development where AI can generate code instantly but cannot guarantee that the code will remain stable over time.

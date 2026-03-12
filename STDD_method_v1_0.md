@@ -85,6 +85,12 @@ This makes the system stable even when implementations change.
 
 STDD is built on several fundamental principles.
 
+## Regeneration is the Core Operation
+
+The central innovation of STDD is the **regeneration loop**: the ability to discard and regenerate implementations at any time because the specification and test layers are strong enough to verify any new implementation from scratch.
+
+Regeneration is not an emergency measure. It is a normal operation. Code is deliberately disposable.
+
 ## Behavior Defines the System
 
 The system is defined by **what it does**, not how it is implemented.
@@ -95,9 +101,11 @@ If a behavior cannot be tested, it does not exist.
 
 Tests are the ultimate verification of correctness.
 
-## Implementation is Replaceable
+## The Specification Layer Makes Regeneration Safe
 
-Code can be regenerated at any time as long as the tests continue to pass.
+TDD established that tests come before code. STDD adds a specification layer above the tests: behavioral scenarios, invariants, acceptance cases, failure conditions, and constraints.
+
+This layer captures intent that tests alone cannot express. Together, the specification and tests form a **knowledge layer** strong enough to safely regenerate any implementation.
 
 ## Specifications Must Be Precise
 
@@ -264,19 +272,26 @@ Because AI can generate code quickly, multiple attempts can be made until the te
 
 # 9. Regeneration Loop
 
-One of the most powerful features of STDD is the **regeneration loop**.
+The **regeneration loop** is the central mechanism that distinguishes STDD from traditional test‑first approaches.
 
-If code becomes difficult to maintain or optimize, the implementation can simply be regenerated.
+TDD and BDD also place tests before implementation. But they assume that code is maintained incrementally. Refactoring improves existing code. The implementation accumulates history and implicit knowledge over time.
+
+STDD takes a different position: **code is deliberately disposable**.
+
+If an implementation becomes difficult to maintain, inefficient, or outdated, it is not refactored. It is discarded and regenerated.
 
 Process:
 
 1. Keep specification
 2. Keep tests
-3. Generate new implementation
-4. Execute tests
-5. Accept if tests pass
+3. Discard existing implementation
+4. Generate new implementation
+5. Execute tests
+6. Accept if tests pass
 
-This makes implementations **disposable**.
+This is only safe when the specification and test layers are strong enough to fully define the expected behavior. A weak specification or incomplete test suite makes regeneration dangerous.
+
+The quality of the regeneration loop depends entirely on the quality of the knowledge layer above the code.
 
 System stability comes from the specification and tests, not from preserving the original code.
 
