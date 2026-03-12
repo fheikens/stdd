@@ -7,6 +7,10 @@ Date: 2026
 
 ---
 
+> For a complete end-to-end walkthrough with multiple components, NFRs, traceability, and regeneration, see [Seat Reservation API](seat-reservation.md).
+
+---
+
 ## Table of Contents
 
 - [1. Introduction](#1-introduction)

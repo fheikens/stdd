@@ -97,7 +97,8 @@ Start with the manifesto and method. Then go deeper based on your role.
 
 | Document | Description |
 |----------|-------------|
-| [Worked Examples](examples/examples.md) | Practical STDD development examples |
+| [Seat Reservation API](examples/seat-reservation.md) | Full end-to-end walkthrough: specs, tests, implementation, regeneration |
+| [Short Examples](examples/examples.md) | Single-feature STDD examples |
 
 ---
 
@@ -123,6 +124,7 @@ stdd/
 │   └── why-ai-needs-stdd.md
 │
 ├── examples/
+│   ├── seat-reservation.md
 │   └── examples.md
 │
 └── diagrams/
