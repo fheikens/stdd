@@ -108,7 +108,7 @@ Returns all seats for a given event that are currently available (not held, not 
 - event_id (string, required)
 
 **Outputs:**
-- List of available seats, each containing: seat_id, section, row, number, price
+- List of available seats, each containing: seat_id, section, row, number
 
 **Constraints:**
 - Returns only seats with status "available"
@@ -137,6 +137,7 @@ Places a temporary hold on an available seat for a specific customer. The seat b
 **Constraints:**
 - The seat must be in "available" status
 - The hold duration is configured per event (default: 10 minutes)
+- A hold is considered expired when the current time is strictly past the expiry time (expires_at is exclusive)
 - After the hold is created, the seat status is "held"
 - The hold records which customer holds it
 
@@ -536,6 +537,20 @@ acceptance_cases:
       seat_status_after: "held"
       held_by_after: "cust-1"
 
+  - id: SEAT-HOLD-03
+    feature: hold_seat
+    given:
+      event_id: "concert-1"
+      seat_id: "S1"
+      seat_status: "reserved"
+    when:
+      action: hold_seat
+      customer_id: "cust-2"
+      event_id: "concert-1"
+      seat_id: "S1"
+    then:
+      error: "Seat is not available"
+
   - id: SEAT-CANCEL-01
     feature: cancel
     given:
@@ -609,6 +624,21 @@ acceptance_cases:
       error: "Hold has expired"
       seat_status_after: "available"
 
+  - id: SEAT-CONF-03
+    feature: confirm_reservation
+    given:
+      hold_id: "H1"
+      customer_id: "cust-1"
+      seat_id: "S1"
+      hold_expired: false
+    when:
+      action: confirm_reservation
+      hold_id: "H1"
+      customer_id: "cust-2"
+    then:
+      error: "Hold not found"
+      hold_unaffected: true
+
   - id: PRICE-01
     feature: pricing
     given:
@@ -671,6 +701,7 @@ acceptance_cases:
       group_size: 1
     then:
       unit_price: 50.00
+      total_price: 50.00
 
   - id: PRICE-05
     feature: pricing
@@ -761,14 +792,14 @@ Every specification statement maps to at least one test. Every test maps back to
 | PRICE-04 | Rounding | `test_price_rounding` |
 | PRICE-05 | Invalid group size | `test_invalid_group_size` |
 | INV-01 | Seat status exclusivity | `test_invariant_seat_status_exclusive` |
+| INV-02 | No orphaned holds | `test_invariant_no_orphaned_holds` |
 | INV-03 | No double-booking | `test_invariant_no_double_booking` |
 | INV-04 | State machine enforcement | `test_invariant_state_transitions` |
 | INV-05 | Price consistency | `test_invariant_price_deterministic` |
+| INV-06 | Cancellation completeness | `test_invariant_cancellation_completeness` |
 | NFR-DECIMAL | Decimal arithmetic in pricing | `test_nfr_decimal_arithmetic` |
 | NFR-CLOCK | Injectable clock for expiry | `test_nfr_injectable_clock` |
 | NFR-EXCLUSIVE | Exclusive hold enforcement | `test_nfr_exclusive_hold` |
-| INV-02 | No orphaned holds | `test_invariant_no_orphaned_holds` |
-| INV-06 | Cancellation completeness | `test_invariant_cancellation_completeness` |
 | INT-01 | Confirmation price matches PricingEngine | `test_integration_confirm_uses_correct_pricing` |
 | INT-02 | Expired hold allows rebook by another customer | `test_integration_expiry_then_rebook` |
 | INT-03 | Cancelled hold allows rebook | `test_integration_cancel_then_rebook` |
@@ -1545,6 +1576,8 @@ class ReservationService:
         hold = self._holds.get(hold_id)
         if not hold or hold["customer_id"] != customer_id:
             raise ValueError("Hold not found")
+        if hold.get("status") != "active":
+            raise ValueError("Hold not found")
         return hold
 ```
 
@@ -1579,14 +1612,14 @@ test_invariant_cancellation_completeness PASSED
 test_nfr_decimal_arithmetic             PASSED
 test_nfr_injectable_clock               PASSED
 test_nfr_exclusive_hold                 PASSED
-test_integration_confirm_pricing        PASSED
-test_integration_expiry_then_rebook     PASSED
-test_integration_cancel_then_rebook     PASSED
-test_integration_expired_hold           PASSED
-test_system_full_booking_workflow       PASSED
-test_system_competing_customers         PASSED
-test_system_hold_expire_rebook          PASSED
-test_system_cancel_and_rebook           PASSED
+test_integration_confirm_uses_correct_pricing PASSED
+test_integration_expiry_then_rebook           PASSED
+test_integration_cancel_then_rebook           PASSED
+test_integration_expired_hold_does_not_confirm PASSED
+test_system_full_booking_workflow             PASSED
+test_system_competing_customers              PASSED
+test_system_hold_expire_rebook_confirm       PASSED
+test_system_cancel_and_rebook_full_cycle     PASSED
 
 34 passed in 0.08s
 ```
@@ -1685,7 +1718,7 @@ For this example, the fingerprint inputs are:
 
 ```
 specifications:
-  - feature_specs (sections 4.1 through 4.6)
+  - feature_specs (Features 1 through 6 in section 4)
   - behavioral_scenarios (section 5)
   - invariants (section 6)
   - acceptance_cases (section 7)

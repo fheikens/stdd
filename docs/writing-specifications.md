@@ -170,7 +170,7 @@ Not all specifications operate at the same level of detail. STDD defines four le
 |-------|-------|-----------|---------|
 | System | End-to-end workflows | Yes — system tests | "Customer holds seat, confirms, receives ticket" |
 | Integration | Multiple components collaborating | Yes — integration tests | "Confirmation uses pricing and updates inventory" |
-| Component | One module or class | Yes — component tests | "PricingEngine calculates prices" |
+| Component | Multiple functions within one component | Yes — component tests | "PricingEngine calculates prices" |
 | Unit | One function | Yes — unit tests | "calculate_price returns correct decimal" |
 
 ## 4.1 System Specification
@@ -303,29 +303,29 @@ A scenario defines three things:
 ## Example: Seat Reservation
 
 ```
-Scenario: Reserve an available seat
+Scenario: Hold an available seat
   Given: Seat A1 is available
-  When: User requests to reserve Seat A1
-  Then: Seat A1 is marked as reserved
-  Then: The reservation expires in 10 minutes
+  When: User requests to hold Seat A1
+  Then: Seat A1 is marked as held
+  Then: The hold expires in 10 minutes
 
-Scenario: Reserve an already reserved seat
-  Given: Seat A1 is reserved by another user
-  When: User requests to reserve Seat A1
+Scenario: Hold an already held seat
+  Given: Seat A1 is held by another user
+  When: User requests to hold Seat A1
   Then: The request is rejected
   Then: The response indicates the seat is unavailable
 
-Scenario: Reserve a seat after reservation expires
-  Given: Seat A1 was reserved but the reservation has expired
-  When: User requests to reserve Seat A1
-  Then: Seat A1 is marked as reserved
-  Then: A new reservation is created
+Scenario: Hold a seat after hold expires
+  Given: Seat A1 was held but the hold has expired
+  When: User requests to hold Seat A1
+  Then: Seat A1 is marked as held
+  Then: A new hold is created
 
-Scenario: Reserve a sold seat
-  Given: Seat A1 has been sold
-  When: User requests to reserve Seat A1
+Scenario: Hold a reserved seat
+  Given: Seat A1 has been reserved (confirmed)
+  When: User requests to hold Seat A1
   Then: The request is rejected
-  Then: The response indicates the seat is sold
+  Then: The response indicates the seat is unavailable
 ```
 
 ## Scenario Guidelines
@@ -362,13 +362,14 @@ Unlike scenarios, which describe specific situations, invariants describe univer
 
 ```
 Invariant: A seat can be in exactly one state at any time:
-           available, reserved, or sold.
+           available, held, or reserved.
 
-Invariant: A sold seat cannot transition to any other state.
+Invariant: State transitions follow: available → held → reserved,
+           held → available (cancel/expiry), reserved → available (cancel).
 
-Invariant: A reservation must have an expiration time.
+Invariant: A hold must have an expiration time.
 
-Invariant: No more than one active reservation may exist
+Invariant: No more than one active hold may exist
            for a single seat at any time.
 ```
 
@@ -872,14 +873,14 @@ Example:
 
 | Specification Element | Type | Test |
 |---|---|---|
-| Reserve available seat | Scenario | test_available_seat_can_be_held |
-| Reserve already reserved seat | Scenario | test_active_hold_blocks_new_hold |
-| Reserve seat with expired hold | Scenario | test_expired_hold_allows_new_hold |
-| Reserve sold seat | Scenario | test_sold_seat_cannot_be_held |
-| Seat in exactly one state | Invariant | test_seat_state_is_always_singular |
-| Sold seat cannot transition | Invariant | test_sold_seat_is_final |
-| No more than one active hold | Invariant | test_single_active_hold_per_seat |
-| Seat does not exist | Failure | test_nonexistent_seat_returns_error |
+| Hold an available seat | Scenario | test_hold_available_seat |
+| Hold an already held seat | Scenario | test_hold_already_held_seat |
+| Hold a seat after hold expires | Scenario | test_expiry_releases_seats |
+| Hold a reserved seat | Scenario | test_hold_reserved_seat |
+| Seat in exactly one state | Invariant | test_invariant_seat_status_exclusive |
+| Valid state transitions only | Invariant | test_invariant_state_transitions |
+| No more than one active hold | Invariant | test_invariant_no_double_booking |
+| Unknown event | Failure | test_list_seats_unknown_event |
 
 If a specification element has no corresponding test, the gap is visible immediately.
 

@@ -445,5 +445,3 @@ When these principles are followed, implementations become genuinely disposable.
 For guidance on writing the specifications that drive these architectures, see [Writing Specifications](writing-specifications.md). For a worked example showing these patterns applied, see the [Seat Reservation API](../examples/seat-reservation.md).
 
 For non‑functional quality constraints that architectures must enforce, see [NFR Framework](nfr-framework.md).
-
-For a worked example showing these patterns in practice, see [Seat Reservation API](../examples/seat-reservation.md).
