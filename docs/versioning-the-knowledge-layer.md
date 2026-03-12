@@ -49,21 +49,11 @@ At minimum, the following artifacts should live in Git:
 
 ---
 
-## 4. Repository Structure Example
+## 4. Repository Structure
 
-Example STDD repository structure:
+The STDD repository structure keeps **organizational knowledge separate from technical realization**. Features, specifications, and acceptance cases live under `features/`, while language-specific source and tests live under `implementations/`.
 
-```
-stdd-system/
-  features/
-  implementations/
-  prompts/
-  diagrams/
-  docs/
-  tools/
-```
-
-This keeps **organizational knowledge separate from technical realization**.
+For the canonical repository structure, see [Engineering Playbook](engineering-playbook.md), Section 2.
 
 ---
 
@@ -127,4 +117,4 @@ By storing the knowledge layer in Git, organizations gain:
 
 For guidance on writing the specifications that form the knowledge layer, see [Writing Specifications](writing-specifications.md).
 
-For non‑functional quality constraints that must be versioned alongside specifications, see [NFR Framework](nfr-framework.md).
+For non‑functional quality constraints that must be versioned alongside specifications, see [NFR Framework](nfr-framework.md). For CI/CD enforcement of specification integrity, see [Engineering Playbook](engineering-playbook.md), Section 5 (CSI).

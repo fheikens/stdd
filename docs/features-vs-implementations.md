@@ -119,6 +119,8 @@ func CalculateTotal(items []float64, taxRate float64) float64 {
 
 Both implementations satisfy the same feature definition.
 
+> **Note:** These simplified examples use floating-point arithmetic for clarity. In production systems involving monetary calculations, the [NFR Framework](nfr-framework.md) requires decimal types with defined precision. Go implementations would use a decimal library such as `shopspring/decimal`.
+
 ---
 
 # 5. Why Language Independence Matters
@@ -203,32 +205,9 @@ Both implementations verify the same behavior.
 
 # 8. Recommended Repository Structure
 
-A practical STDD repository structure might look like this:
-```
-features
-│
-└── cart_total
-    ├── specification.md
-    ├── scenarios.md
-    ├── invariants.md
-    └── acceptance_cases.yaml
+An STDD repository separates **behavior definition** (features, specifications, acceptance cases) from **implementation** (language-specific source and tests). Each feature has a single specification and may have multiple implementations in different languages.
 
-implementations
-│
-└── cart_total
-    ├── python
-    │   ├── src
-    │   └── tests
-    │
-    ├── go
-    │   ├── src
-    │   └── tests
-    │
-    └── java
-        ├── src
-        └── tests
-```
-This clearly separates **behavior definition** from **implementation**.
+For the canonical repository structure and examples, see [Engineering Playbook](engineering-playbook.md), Section 2.
 
 ---
 
@@ -265,3 +244,7 @@ By maintaining this separation, STDD enables:
 In STDD, the feature is permanent.
 
 The implementation is replaceable.
+
+---
+
+For guidance on writing feature specifications, see [Writing Specifications](writing-specifications.md). For non-functional quality constraints, see the [NFR Framework](nfr-framework.md). For a complete multi-language example, see the [Seat Reservation API](../examples/seat-reservation.md).

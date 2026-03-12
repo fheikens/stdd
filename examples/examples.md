@@ -115,6 +115,20 @@ def calculate_total(items, tax_rate):
     return subtotal + (subtotal * tax_rate)
 ```
 
+## Failure Condition Tests
+
+```python
+def test_negative_price_rejected():
+    with pytest.raises(ValueError):
+        calculate_total([-10, 20], 0.10)
+
+def test_negative_tax_rate_rejected():
+    with pytest.raises(ValueError):
+        calculate_total([10, 20], -0.05)
+```
+
+> **Note:** This simplified example uses floating-point arithmetic for clarity. In production systems involving monetary calculations, the [NFR Framework](../docs/nfr-framework.md) requires decimal types with defined precision.
+
 ## STDD Observation
 
 The important artifact is not the function itself.
@@ -206,7 +220,7 @@ Status: accepted
 Description:
   The system must place a temporary hold on a seat
   for a fixed number of minutes. A seat that is already
-  held or sold cannot be held again. An expired hold
+  held or reserved cannot be held again. An expired hold
   must no longer block a new hold.
 
 Inputs:
@@ -217,8 +231,8 @@ Outputs:
   - result: boolean (True if seat can be held)
 
 Invariants:
-  - A seat can be in exactly one state: available, held, or sold.
-  - A sold seat cannot transition to any other state.
+  - A seat can be in exactly one state: available, held, or reserved.
+  - A reserved seat cannot be held again (it must be cancelled first).
   - No more than one active hold may exist for a single seat.
 
 Failure Conditions:
@@ -230,7 +244,7 @@ Failure Conditions:
 - An available seat can be held
 - A held seat cannot be held again before expiration
 - An expired hold allows a new hold
-- A sold seat can never be held
+- A reserved seat cannot be held
 
 ## Example Tests
 
@@ -261,8 +275,8 @@ def test_expired_hold_allows_new_hold():
 
     assert can_hold_seat(seat, now) is True
 
-def test_sold_seat_cannot_be_held():
-    seat = {"status": "sold", "hold_until": None}
+def test_reserved_seat_cannot_be_held():
+    seat = {"status": "reserved", "hold_until": None}
     now = datetime(2026, 1, 1, 10, 0, 0)
 
     assert can_hold_seat(seat, now) is False
@@ -272,7 +286,7 @@ def test_sold_seat_cannot_be_held():
 
 ```python
 def can_hold_seat(seat, now):
-    if seat["status"] == "sold":
+    if seat["status"] == "reserved":
         return False
 
     if seat["status"] == "available":
@@ -361,6 +375,18 @@ def classify_score(score):
     return "high"
 ```
 
+## Failure Condition Tests
+
+```python
+def test_score_below_range():
+    with pytest.raises(ValueError, match="Score must be between 0 and 100"):
+        classify_score(-1)
+
+def test_score_above_range():
+    with pytest.raises(ValueError, match="Score must be between 0 and 100"):
+        classify_score(101)
+```
+
 ## STDD Observation
 
 This example is close to real scoring logic.
@@ -408,3 +434,7 @@ In every case, the principle remains the same:
 - regenerate if necessary
 
 That is what makes software stable in an era of AI-generated code.
+
+---
+
+For a complete multi-component example with NFRs, traceability, and regeneration, see the [Seat Reservation API](seat-reservation.md). For guidance on writing specifications, see [Writing Specifications](../docs/writing-specifications.md).

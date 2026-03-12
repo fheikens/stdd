@@ -85,7 +85,7 @@ An automated verification that confirms a specification is satisfied.
 The code or system that satisfies the specification and passes the tests.
 
 **Specification Fingerprint**
-The cryptographically hashed bundle of specifications, tests, behavioral contracts, and reference results that defines a system's behavioral identity.
+The cryptographically hashed bundle of specifications, tests, behavioral contracts, and acceptance cases that defines a system's behavioral identity.
 
 **Knowledge Layer**
 The permanent layer above the code: specifications, tests, acceptance cases, invariants, and contracts. The knowledge layer defines the system. Implementations are generated from it and verified against it.
@@ -135,3 +135,7 @@ Languages may evolve.
 AI models will improve.
 
 But the system's behavior remains stable.
+
+---
+
+For the practical workflow, see the [Method](docs/method.md). For guidance on writing specifications, see [Writing Specifications](docs/writing-specifications.md). For a worked example, see the [Seat Reservation API](examples/seat-reservation.md).

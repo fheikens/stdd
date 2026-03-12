@@ -253,3 +253,7 @@ This is not simply "TDD with AI." The ability to discard and regenerate code at 
 The specification and tests become the permanent artifacts. The implementation is temporary.
 
 This makes STDD particularly well suited for modern software development where AI can generate code instantly but cannot guarantee that the code will remain stable over time.
+
+---
+
+For the complete methodology, see the [Method](../docs/method.md). For the regeneration model in practice, see the [Seat Reservation API](../examples/seat-reservation.md). For common mistakes when adopting STDD, see [Anti-Patterns](anti-patterns.md).

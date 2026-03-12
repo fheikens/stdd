@@ -4,6 +4,8 @@
 A complete STDD walkthrough from requirement to regeneration.
 
 Author: Frank Heikens
+Version: 1.0
+Date: 2026
 
 ---
 
@@ -445,7 +447,7 @@ Every seat with status "held" has exactly one associated hold record with a futu
 At most one customer can hold or reserve a given seat at any time.
 
 **INV-04: State machine enforcement**
-Seat transitions follow: available → held → reserved → available, or held → available. No other transitions are permitted.
+Seat transitions follow: available → held → reserved, held → available (cancel/expiry), or reserved → available (cancel). No other transitions are permitted.
 
 **INV-05: Price consistency**
 For the same inputs (section, event, group_size), the PricingEngine always returns the same result.
@@ -514,8 +516,7 @@ acceptance_cases:
       event_id: "concert-1"
       seat_id: "S1"
     then:
-      returns: hold_id
-      returns: expires_at
+      returns: [hold_id, expires_at]
       seat_status_after: "held"
 
   - id: SEAT-HOLD-02

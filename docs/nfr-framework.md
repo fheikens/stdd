@@ -561,4 +561,4 @@ Tests verify both.**
 
 ---
 
-For guidance on writing the specifications that declare technology and domain context, see [Writing Specifications](writing-specifications.md).
+For guidance on writing the specifications that declare technology and domain context, see [Writing Specifications](writing-specifications.md). For architectural patterns that support NFR compliance during regeneration, see [Architecture](architecture.md). For a worked example showing NFR activation in practice, see the [Seat Reservation API](../examples/seat-reservation.md).

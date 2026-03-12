@@ -169,7 +169,7 @@ Not all specifications operate at the same level of detail. STDD defines four le
 | Level | Scope | Testable? | Example |
 |-------|-------|-----------|---------|
 | System | End-to-end workflows | Yes — system tests | "Customer holds seat, confirms, receives ticket" |
-| Feature | One user-facing capability, often crossing components | Yes — integration tests | "Reserve a seat for a fixed duration" |
+| Integration | Multiple components collaborating | Yes — integration tests | "Confirmation uses pricing and updates inventory" |
 | Component | One module or class | Yes — component tests | "PricingEngine calculates prices" |
 | Unit | One function | Yes — unit tests | "calculate_price returns correct decimal" |
 
@@ -183,15 +183,15 @@ Example:
 
 System specifications are testable. They produce system-level tests that verify the full workflow across all components.
 
-## 4.2 Feature Specification
+## 4.2 Integration Specification
 
-Describes a single user-facing feature. A feature typically involves multiple components working together.
+Describes how multiple components work together to deliver a user-facing capability.
 
 Example:
 
-> The system must allow users to reserve a seat for a fixed duration. A reserved seat cannot be reserved by another user until the reservation expires or is released.
+> When a hold is confirmed, the ReservationService retrieves the seat's section from SeatInventory, calculates the price via PricingEngine, and updates the seat status to reserved. The final price returned to the customer matches the PricingEngine calculation.
 
-Feature specifications are the primary unit of work in STDD. They produce integration tests that verify components collaborate correctly, and behavioral tests that drive implementation generation.
+Integration specifications are the primary unit of work in STDD. They produce integration tests that verify components collaborate correctly, and behavioral tests that drive implementation generation.
 
 ## 4.3 Component Specification
 
@@ -468,7 +468,7 @@ Other formats may be used. The requirement is that acceptance cases are structur
 
 A specification must declare its technology and domain context so that the correct non-functional requirements activate automatically.
 
-This connects the specification to the NFR Framework (see STDD Non-Functional Requirements Framework).
+This connects the specification to the [NFR Framework](nfr-framework.md).
 
 ## Technology Declaration
 

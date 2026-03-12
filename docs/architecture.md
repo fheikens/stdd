@@ -386,6 +386,8 @@ This is a useful exercise even if you do not intend to regenerate immediately. I
 
 **Undocumented behavior.** The hardest part of brownfield STDD is discovering behavior that is not obvious from the code. Bug-for-bug compatibility may be necessary if other systems depend on specific behavior, even if that behavior was originally unintended.
 
+For a step-by-step team migration guide, see the [Adoption Guide](adoption-guide.md).
+
 ---
 
 # 11. System Evolution
@@ -440,7 +442,7 @@ When these principles are followed, implementations become genuinely disposable.
 
 ---
 
-For guidance on writing the specifications that drive these architectures, see [Writing Specifications](writing-specifications.md).
+For guidance on writing the specifications that drive these architectures, see [Writing Specifications](writing-specifications.md). For a worked example showing these patterns applied, see the [Seat Reservation API](../examples/seat-reservation.md).
 
 For non‑functional quality constraints that architectures must enforce, see [NFR Framework](nfr-framework.md).
 

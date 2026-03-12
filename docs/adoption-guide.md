@@ -141,6 +141,8 @@ Do not migrate features that are stable and not being changed. That is unnecessa
 
 At this point, the feature is under STDD control. Future changes start with a specification update.
 
+For architectural guidance on handling tightly coupled components, global state, and other brownfield challenges, see [Architecture](architecture.md), Section 10.
+
 ---
 
 # 6. Introducing the CI Pipeline
@@ -283,6 +285,8 @@ How often do changes break existing behavior? In a well-adopted STDD system, reg
 **Do not regenerate without running the full test pyramid.** A regenerated component may pass unit tests while breaking integration tests. Always run tests at all levels.
 
 **Do not weaken tests to accommodate AI limitations.** If AI cannot satisfy a test, strengthen the prompt or decompose the component. The test represents the specification. It does not change to accommodate a flawed implementation.
+
+For a comprehensive catalog of these and other STDD mistakes, see [Anti-Patterns](../reference/anti-patterns.md).
 
 ---
 
