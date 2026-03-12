@@ -137,4 +137,8 @@ stdd
 
 # License
 
-BSD
+Licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+
+You are free to share and adapt this work, provided you give appropriate credit to the original author.
+
+Author: Frank Heikens
