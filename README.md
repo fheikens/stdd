@@ -104,6 +104,8 @@ Start with the manifesto and method. Then go deeper based on your role.
 
 ## Repository Structure
 
+This repository contains the **STDD methodology documentation**, not a project built with STDD. The canonical `features/` + `implementations/` structure described in the [Engineering Playbook](docs/engineering-playbook.md) applies to projects that *use* STDD.
+
 ```
 stdd/
 ├── README.md
