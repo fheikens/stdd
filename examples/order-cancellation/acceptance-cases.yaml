@@ -1,0 +1,105 @@
+acceptance_cases:
+
+  - name: cancel pending order — no refund
+    spec_id: ORD-CANCEL-01
+    given:
+      order_id: "ORD-100"
+      order_status: "pending"
+    when:
+      action: cancel_order
+      reason: "Changed my mind"
+    then:
+      order_id: "ORD-100"
+      previous_status: "pending"
+      new_status: "cancelled"
+      refund_triggered: false
+      reason: "Changed my mind"
+      cancelled_at: present
+
+  - name: cancel confirmed order — refund triggered
+    spec_id: ORD-CANCEL-02
+    given:
+      order_id: "ORD-200"
+      order_status: "confirmed"
+    when:
+      action: cancel_order
+      reason: "Found cheaper alternative"
+    then:
+      order_id: "ORD-200"
+      previous_status: "confirmed"
+      new_status: "cancelled"
+      refund_triggered: true
+      reason: "Found cheaper alternative"
+      cancelled_at: present
+
+  - name: reject cancellation of shipped order
+    spec_id: ORD-CANCEL-03
+    given:
+      order_id: "ORD-300"
+      order_status: "shipped"
+    when:
+      action: cancel_order
+      reason: "No longer needed"
+    then:
+      error: true
+      error_code: "ORDER_NOT_CANCELLABLE"
+
+  - name: reject cancellation of delivered order
+    spec_id: ORD-CANCEL-04
+    given:
+      order_id: "ORD-400"
+      order_status: "delivered"
+    when:
+      action: cancel_order
+      reason: "Wrong item"
+    then:
+      error: true
+      error_code: "ORDER_NOT_CANCELLABLE"
+
+  - name: reject cancellation of already cancelled order
+    spec_id: ORD-CANCEL-05
+    given:
+      order_id: "ORD-500"
+      order_status: "cancelled"
+    when:
+      action: cancel_order
+      reason: "Duplicate request"
+    then:
+      error: true
+      error_code: "ORDER_ALREADY_CANCELLED"
+
+  - name: cancellation records timestamp and reason
+    spec_id: ORD-CANCEL-06
+    given:
+      order_id: "ORD-100"
+      order_status: "pending"
+    when:
+      action: cancel_order
+      reason: "Changed my mind"
+    then:
+      cancelled_at: present
+      reason: "Changed my mind"
+
+  - name: reject cancellation with empty reason
+    spec_id: ORD-CANCEL-07
+    given:
+      order_id: "ORD-100"
+      order_status: "pending"
+    when:
+      action: cancel_order
+      reason: ""
+    then:
+      error: true
+      error_code: "INVALID_REASON"
+
+  - name: reject cancellation of non-existent order
+    spec_id: ORD-CANCEL-08
+    given:
+      order_id: "ORD-999"
+      order_status: null
+    when:
+      action: cancel_order
+      reason: "Cancel please"
+    then:
+      error: true
+      error_code: "ORDER_NOT_FOUND"

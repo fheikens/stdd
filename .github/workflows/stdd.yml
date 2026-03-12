@@ -1,0 +1,88 @@
+# =============================================================================
+# STDD Reference Workflow — Continuous Specification Integrity (CSI)
+# =============================================================================
+#
+# This is a reference GitHub Actions workflow for STDD projects. Teams should
+# copy this file into their own repository at .github/workflows/stdd.yml and
+# adjust paths to match their project structure.
+#
+# The workflow enforces the three CSI gates described in the STDD Engineering
+# Playbook (docs/engineering-playbook.md):
+#
+#   Gate 1 — Traceability validation
+#     Ensures every specification ID has at least one corresponding test,
+#     and no orphaned tests exist without a specification.
+#
+#   Gate 2 — Test execution
+#     Runs the full test suite (unit, integration, and system tests).
+#     All tests must pass for the build to succeed.
+#
+#   Gate 3 — Fingerprint verification
+#     Computes a hash of the knowledge layer (specifications + tests) and
+#     compares it against the stored .fingerprint file. A mismatch means
+#     the knowledge layer changed — the developer must run --update and
+#     commit the new fingerprint alongside their spec/test changes.
+#
+# Gates run in sequence: traceability -> tests -> fingerprint. If an earlier
+# gate fails, later gates do not run, giving fast feedback on the root cause.
+# =============================================================================
+
+name: STDD CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  specification-integrity:
+    name: Continuous Specification Integrity
+    runs-on: ubuntu-latest
+
+    steps:
+      # ------------------------------------------------------------------
+      # Setup
+      # ------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pytest
+
+      # ------------------------------------------------------------------
+      # Gate 1 — Traceability validation
+      #
+      # Verifies that every specification ID found in .md files under the
+      # features/ directory has at least one matching test in the tests/
+      # directory. Exits with code 1 if any specification is untested.
+      # ------------------------------------------------------------------
+      - name: "Gate 1: Validate traceability matrix"
+        run: python tools/validate_traceability.py --spec-dir features/ --test-dir tests/
+
+      # ------------------------------------------------------------------
+      # Gate 2 — Test execution
+      #
+      # Runs the full test suite across all pyramid levels (unit,
+      # integration, system). Tests are the executable specification —
+      # every test must pass for the build to succeed.
+      # ------------------------------------------------------------------
+      - name: "Gate 2: Run test suite"
+        run: pytest tests/ -v --tb=short
+
+      # ------------------------------------------------------------------
+      # Gate 3 — Fingerprint verification
+      #
+      # Computes a SHA-256 hash of the entire knowledge layer (all spec
+      # and test files) and compares it against the committed .fingerprint
+      # file. If they differ, someone changed the knowledge layer without
+      # updating the fingerprint — the build fails.
+      #
+      # Pure implementation changes (regeneration) do not affect the
+      # fingerprint. Only spec or test changes trigger a mismatch.
+      # ------------------------------------------------------------------
+      - name: "Gate 3: Verify specification fingerprint"
+        run: python tools/compute_fingerprint.py --spec-dir features/ --test-dir tests/ --compare

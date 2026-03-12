@@ -90,6 +90,7 @@ Start with the manifesto and method. Then go deeper based on your role.
 
 | Document | Description |
 |----------|-------------|
+| [Glossary](docs/glossary.md) | Quick reference for all STDD terminology |
 | [Anti-Patterns](reference/anti-patterns.md) | Common mistakes and how to avoid them |
 | [STDD vs Existing Methods](reference/vs-existing-methods.md) | Comparison with TDD, BDD, and other approaches |
 
@@ -98,7 +99,16 @@ Start with the manifesto and method. Then go deeper based on your role.
 | Document | Description |
 |----------|-------------|
 | [Seat Reservation API](examples/seat-reservation.md) | Full end-to-end walkthrough: specs, tests, implementation, regeneration |
+| [Order Cancellation](examples/order-cancellation/) | Complete standalone feature: spec, tests, traceability, implementation |
 | [Short Examples](examples/examples.md) | Single-feature STDD examples |
+
+### Tooling
+
+| Resource | Description |
+|----------|-------------|
+| [Templates](templates/) | Copy-paste starter files for new STDD features |
+| [Tools](tools/) | Reference CSI scripts (fingerprint, traceability validation) |
+| [CI Workflow](.github/workflows/stdd.yml) | GitHub Actions reference workflow for CSI |
 
 ---
 
@@ -119,7 +129,8 @@ stdd/
 │   ├── engineering-playbook.md
 │   ├── adoption-guide.md
 │   ├── versioning-the-knowledge-layer.md
-│   └── features-vs-implementations.md
+│   ├── features-vs-implementations.md
+│   └── glossary.md
 │
 ├── reference/
 │   ├── anti-patterns.md
@@ -127,7 +138,24 @@ stdd/
 │
 ├── examples/
 │   ├── seat-reservation.md
-│   └── examples.md
+│   ├── examples.md
+│   └── order-cancellation/          ← complete standalone feature
+│       ├── specification.md
+│       ├── acceptance-cases.yaml
+│       ├── traceability-matrix.md
+│       └── implementations/python/
+│
+├── templates/                       ← copy-paste starters
+│   ├── specification.md
+│   ├── acceptance-cases.yaml
+│   ├── traceability-matrix.md
+│   └── tfp-prompt.md
+│
+├── tools/                           ← reference CSI scripts
+│   ├── compute_fingerprint.py
+│   └── validate_traceability.py
+│
+├── .github/workflows/stdd.yml      ← reference CI workflow
 │
 └── diagrams/
     ├── stdd_development_loop.md

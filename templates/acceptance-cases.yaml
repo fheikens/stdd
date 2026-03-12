@@ -1,0 +1,47 @@
+# Acceptance Cases for [FEATURE_NAME]
+#
+# Each case defines a concrete input/output pair derived from the specification.
+# These cases are language-neutral and can generate tests in any language.
+# Every case must reference a spec ID from the specification or traceability matrix.
+
+acceptance_cases:
+
+  # Happy path: the normal, expected usage
+  - name: "[describe the normal case, e.g. apply percentage discount to cart]"
+    spec_id: "RULE-1"
+    given:
+      # Initial state before the action
+      [field_name]: "[value]"
+      [field_name]: "[value]"
+    when:
+      action: "[action_name]"
+      [parameter]: "[value]"
+    then:
+      # Expected state or output after the action
+      [field_name]: "[expected_value]"
+      [field_name]: "[expected_value]"
+
+  # Edge case: boundary or unusual but valid input
+  - name: "[describe the edge case, e.g. discount exceeds cart total]"
+    spec_id: "INV-1"
+    given:
+      [field_name]: "[value]"
+      [field_name]: "[value]"
+    when:
+      action: "[action_name]"
+      [parameter]: "[value]"
+    then:
+      [field_name]: "[expected_value]"
+      [field_name]: "[expected_value]"
+
+  # Failure case: invalid input or error condition
+  - name: "[describe the failure, e.g. reject request with invalid input]"
+    spec_id: "FAIL-1"
+    given:
+      [field_name]: "[value]"
+    when:
+      action: "[action_name]"
+      [parameter]: "[invalid_value]"
+    then:
+      result: "rejected"
+      reason: "[error_reason]"
