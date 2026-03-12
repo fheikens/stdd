@@ -3,7 +3,7 @@
 ## A Migration Guide for Existing Teams
 
 Author: Frank Heikens
-Version: 1.0
+Version: 1.1
 Date: 2026
 
 ---
@@ -14,12 +14,15 @@ Date: 2026
 - [2. Prerequisites](#2-prerequisites)
 - [3. Starting Small](#3-starting-small)
 - [4. The First STDD Feature](#4-the-first-stdd-feature)
-- [5. Migrating Existing Features](#5-migrating-existing-features)
-- [6. Introducing the CI Pipeline](#6-introducing-the-ci-pipeline)
-- [7. Team Transition](#7-team-transition)
-- [8. Common Objections](#8-common-objections)
-- [9. Measuring Progress](#9-measuring-progress)
-- [10. What Not to Do](#10-what-not-to-do)
+- [5. Migration Example: Shipping Cost Calculator](#5-migration-example-shipping-cost-calculator)
+- [6. Adoption Timeline](#6-adoption-timeline)
+- [7. Migrating Existing Features](#7-migrating-existing-features)
+- [8. Introducing the CI Pipeline](#8-introducing-the-ci-pipeline)
+- [9. Team Transition](#9-team-transition)
+- [10. Common Objections](#10-common-objections)
+- [11. Measuring Progress](#11-measuring-progress)
+- [12. What Not to Do](#12-what-not-to-do)
+- [13. Retrospective Checklist](#13-retrospective-checklist)
 
 ---
 
@@ -113,7 +116,237 @@ This review produces lessons for the next STDD feature.
 
 ---
 
-# 5. Migrating Existing Features
+# 5. Migration Example: Shipping Cost Calculator
+
+Before migrating an existing feature, it helps to see what the full process looks like. This section walks through a complete migration of a small but realistic function.
+
+## The Legacy Code
+
+The team finds this function in the codebase. It has no tests. It has no documentation beyond the function signature.
+
+```python
+def calculate_shipping(weight, destination, express=False):
+    if destination == "domestic":
+        rate = 5.0
+    elif destination == "international":
+        rate = 15.0
+    else:
+        rate = 10.0
+
+    cost = weight * rate
+    if express:
+        cost *= 1.5
+    if cost < 5.0:
+        cost = 5.0  # minimum charge
+    return round(cost, 2)
+```
+
+Twenty lines of code. No tests, no specification, and one undocumented business rule buried in line 12: a minimum charge of $5.00.
+
+## Step 1: Extract the Specification
+
+Read the code and document what it does. Every branch, every edge case, every implicit rule.
+
+**Specification: Shipping Cost Calculator**
+
+| ID | Element | Description |
+|----|---------|-------------|
+| SC-1 | Input: weight | Numeric, the package weight in kilograms |
+| SC-2 | Input: destination | String, one of "domestic", "international", or other |
+| SC-3 | Input: express | Boolean, default false |
+| SC-4 | Rule: domestic rate | Domestic shipments use a rate of $5.00/kg |
+| SC-5 | Rule: international rate | International shipments use a rate of $15.00/kg |
+| SC-6 | Rule: default rate | Unrecognized destinations use a rate of $10.00/kg |
+| SC-7 | Rule: express multiplier | Express shipping multiplies the cost by 1.5 |
+| SC-8 | Rule: minimum charge | The final cost is never less than $5.00 |
+| SC-9 | Output | Numeric, rounded to 2 decimal places |
+| SC-10 | Failure: invalid weight | Weight must be a positive number |
+
+Note that SC-8 (minimum charge) was not documented anywhere. It was only visible by reading the code. This is exactly the kind of implicit knowledge that migration surfaces.
+
+SC-10 (invalid weight) is not handled in the legacy code at all — it would silently compute nonsensical results for negative weights. The specification makes this gap visible.
+
+## Step 2: Behavioral Scenarios
+
+```gherkin
+Scenario: Domestic standard shipping
+  Given a package weighing 3.0 kg
+  And destination is "domestic"
+  And express is false
+  When shipping cost is calculated
+  Then the cost is $15.00
+
+Scenario: International standard shipping
+  Given a package weighing 2.0 kg
+  And destination is "international"
+  And express is false
+  When shipping cost is calculated
+  Then the cost is $30.00
+
+Scenario: Domestic express shipping
+  Given a package weighing 4.0 kg
+  And destination is "domestic"
+  And express is true
+  When shipping cost is calculated
+  Then the cost is $30.00
+
+Scenario: Minimum charge applies
+  Given a package weighing 0.5 kg
+  And destination is "domestic"
+  And express is false
+  When shipping cost is calculated
+  Then the cost is $5.00 (minimum charge overrides calculated $2.50)
+
+Scenario: Unrecognized destination uses default rate
+  Given a package weighing 2.0 kg
+  And destination is "mars"
+  And express is false
+  When shipping cost is calculated
+  Then the cost is $20.00
+
+Scenario: Express with minimum charge
+  Given a package weighing 0.3 kg
+  And destination is "domestic"
+  And express is true
+  When shipping cost is calculated
+  Then the cost is $5.00 (minimum charge overrides calculated $2.25)
+```
+
+## Step 3: Invariants
+
+```
+INV-1: Shipping cost is always >= $5.00
+INV-2: Shipping cost is always a non-negative number
+INV-3: Express shipping cost >= standard shipping cost for same weight and destination
+```
+
+## Step 4: Tests Against the Existing Code
+
+Write the tests and run them against the legacy implementation. Every test must pass. If a test fails, the specification is wrong — the code defines current behavior.
+
+```python
+def test_domestic_standard():
+    assert calculate_shipping(3.0, "domestic") == 15.00
+
+def test_international_standard():
+    assert calculate_shipping(2.0, "international") == 30.00
+
+def test_domestic_express():
+    assert calculate_shipping(4.0, "domestic", express=True) == 30.00
+
+def test_minimum_charge_applies():
+    assert calculate_shipping(0.5, "domestic") == 5.00
+
+def test_unrecognized_destination():
+    assert calculate_shipping(2.0, "mars") == 20.00
+
+def test_express_with_minimum_charge():
+    assert calculate_shipping(0.3, "domestic", express=True) == 5.00
+
+def test_rounding():
+    assert calculate_shipping(1.333, "domestic") == 6.67
+
+# Invariant tests
+def test_cost_never_below_minimum(weight, destination, express):
+    """Property test: cost is always >= 5.00 for any valid input."""
+    cost = calculate_shipping(weight, destination, express)
+    assert cost >= 5.00
+
+def test_express_never_cheaper(weight, destination):
+    """Property test: express is never cheaper than standard."""
+    standard = calculate_shipping(weight, destination, express=False)
+    express = calculate_shipping(weight, destination, express=True)
+    assert express >= standard
+```
+
+All tests pass against the existing implementation.
+
+## Step 5: Traceability Matrix
+
+| Spec ID | Test |
+|---------|------|
+| SC-4 | test_domestic_standard |
+| SC-5 | test_international_standard |
+| SC-6 | test_unrecognized_destination |
+| SC-7 | test_domestic_express |
+| SC-8 | test_minimum_charge_applies, test_express_with_minimum_charge |
+| SC-9 | test_rounding |
+| INV-1 | test_cost_never_below_minimum |
+| INV-3 | test_express_never_cheaper |
+
+## Step 6: Regeneration Attempt
+
+**First attempt:** The specification was provided to an AI model along with the test suite. The generated implementation correctly handled rates and express multipliers but did not apply the minimum charge. Three tests failed: `test_minimum_charge_applies`, `test_express_with_minimum_charge`, and `test_cost_never_below_minimum`.
+
+The cause was clear: the specification listed the minimum charge rule (SC-8), but the prompt did not emphasize it as a post-calculation constraint. The AI treated it as a note rather than a rule.
+
+**Second attempt:** The specification was strengthened. SC-8 was rewritten from "The final cost is never less than $5.00" to "After all calculations (rate * weight * express multiplier), if the result is less than $5.00, the cost is set to $5.00. This minimum charge applies regardless of weight, destination, or express status." The AI generated a correct implementation. All tests passed.
+
+## Lesson Learned
+
+Migration reveals undocumented behavior. The minimum charge was implicit in the code — a single conditional buried on line 12 — but existed in no documentation, no requirements document, no ticket. Without reading the code line by line, this rule would have been lost during regeneration.
+
+This is the value of the migration process: it forces every business rule into the specification, where it can be verified by tests and communicated to any future implementation — human or AI.
+
+---
+
+# 6. Adoption Timeline
+
+Adopting STDD takes practice. The first feature is the slowest because the team is learning the workflow, not just building the feature. This timeline sets realistic expectations for a team's first eight weeks.
+
+## Weeks 1-2: First Feature — Specification
+
+- Choose the first feature using the criteria in Section 3
+- Write the specification as a team — this is a group exercise for the first feature
+- Hold a specification review where team members challenge the precision of each rule, scenario, and failure condition
+- Goal: a complete specification with behavioral scenarios, invariants, and a specification ID scheme
+
+Writing the first specification takes longer than expected. This is normal. The team is building a new skill.
+
+## Weeks 3-4: First Feature — Tests and Generation
+
+- Translate the specification into tests, one test per scenario
+- Build the traceability matrix
+- Feed the specification and tests to AI and generate the implementation
+- Iterate: when tests fail, refine the prompt or decompose the component — do not change the tests
+- Goal: a working implementation that passes all tests, generated from the specification
+
+Expect 2-4 generation attempts for the first feature. The team is learning what level of specification precision AI requires.
+
+## Week 5: Retrospective
+
+- Review what worked and what did not
+- Identify where the specification was too vague (AI generated wrong behavior)
+- Identify where tests were missing (behavior was unverified)
+- Document lessons for the second feature
+- Use the Retrospective Checklist in Section 13
+
+## Weeks 6-8: Second Feature + First Migration
+
+- Apply STDD to a second new feature — this one goes faster because the team knows the workflow
+- In parallel, begin migrating one existing feature using the process in Section 7 and the example in Section 5
+- Goal: two features under STDD (one new, one migrated) by the end of week 8
+
+By the third feature, specification writing feels natural. The team spends less time debating format and more time debating behavior, which is the productive outcome.
+
+## Effort Estimates
+
+For a single well-scoped function (approximately 50 lines of implementation):
+
+| Activity | Approximate Time |
+|----------|-----------------|
+| Specification writing | ~30 minutes |
+| Test writing | ~45 minutes |
+| AI generation + iteration | ~30 minutes |
+| Review and refinement | ~15 minutes |
+
+A complete feature with 3-5 functions takes approximately 1-2 days of STDD work. This includes the specification, all tests, generation, and review.
+
+These estimates assume the team has completed at least one STDD feature. The first feature takes roughly twice as long while the team learns the workflow.
+
+---
+
+# 7. Migrating Existing Features
 
 After the team is comfortable with STDD on new features, existing features can be migrated gradually.
 
@@ -145,7 +378,7 @@ For architectural guidance on handling tightly coupled components, global state,
 
 ---
 
-# 6. Introducing the CI Pipeline
+# 8. Introducing the CI Pipeline
 
 Once several features are under STDD, introduce Continuous Specification Integrity (CSI) into the CI pipeline.
 
@@ -172,9 +405,25 @@ The CI pipeline only validates features that have STDD specifications. Legacy fe
 
 As more features migrate to STDD, the pipeline covers more of the system.
 
+## Handling Partial Adoption
+
+During the transition period, the codebase contains both STDD and non-STDD code. The CI pipeline must handle this cleanly.
+
+**Scoped validation.** The CI pipeline only runs STDD validation — traceability checks, fingerprint verification — on directories that contain specifications. If a directory has no specification files, the pipeline skips STDD validation for that directory entirely. Non-STDD code continues to run whatever test coverage it already has.
+
+**Mixed PRs.** Some pull requests touch both STDD and non-STDD code. This is normal during transition. The pipeline applies STDD validation only to the STDD portions. The non-STDD portions are validated by existing test suites without STDD-specific gates.
+
+**Non-STDD dependencies.** When an STDD feature depends on a non-STDD component, treat the non-STDD component as an external dependency. Define its contract in the STDD specification: what does the STDD feature expect from the dependency? What inputs does it provide? What outputs does it expect? What error conditions does it handle?
+
+Write tests against this contract. If the non-STDD component changes and breaks the contract, the STDD tests catch it.
+
+**Contract-to-specification migration.** Over time, as non-STDD components are migrated to STDD, the contracts defined by dependent features become the starting point for the component's own specification. The contract says "this is what we expect from it." The specification says "this is what it does." When both align, the migration is validated.
+
+This approach avoids the all-or-nothing trap. The system can run with partial STDD coverage indefinitely, with the coverage expanding as features are migrated.
+
 ---
 
-# 7. Team Transition
+# 9. Team Transition
 
 STDD changes how team members work. The transition should be explicit, not assumed.
 
@@ -206,7 +455,7 @@ The best response is the first STDD feature. When the team sees AI generate a co
 
 ---
 
-# 8. Common Objections
+# 10. Common Objections
 
 ## "We already do TDD"
 
@@ -236,7 +485,7 @@ Performance is specified through NFRs. Benchmark tests verify performance thresh
 
 ---
 
-# 9. Measuring Progress
+# 11. Measuring Progress
 
 Track adoption progress to demonstrate value and identify gaps.
 
@@ -272,7 +521,7 @@ How often do changes break existing behavior? In a well-adopted STDD system, reg
 
 ---
 
-# 10. What Not to Do
+# 12. What Not to Do
 
 **Do not mandate STDD for the entire codebase on day one.** Adopt incrementally.
 
@@ -287,6 +536,46 @@ How often do changes break existing behavior? In a well-adopted STDD system, reg
 **Do not weaken tests to accommodate AI limitations.** If AI cannot satisfy a test, strengthen the prompt or decompose the component. The test represents the specification. It does not change to accommodate a flawed implementation.
 
 For a comprehensive catalog of these and other STDD mistakes, see [Anti-Patterns](../reference/anti-patterns.md).
+
+---
+
+# 13. Retrospective Checklist
+
+After completing each STDD feature, the team should conduct a structured review. This checklist ensures the team captures lessons and improves the process for the next feature.
+
+## Specification Quality
+
+- Was the specification precise enough for AI to generate correct code on the first attempt?
+- Which constraints were missing from the initial specification?
+- Were all failure conditions identified before writing tests?
+- Did the specification use unambiguous language, or did AI misinterpret any rules?
+- Would a developer unfamiliar with the feature understand the specification without reading the code?
+
+## Test Coverage
+
+- Did the tests cover all behavioral scenarios in the specification?
+- Were any edge cases discovered during generation that were not in the specification?
+- Is the traceability matrix complete — every specification ID has at least one test, and every test maps to a specification ID?
+- Are invariants tested with property-based tests, not just example-based tests?
+- Did code coverage reveal any untested paths?
+
+## AI Generation
+
+- How many generation attempts were needed before all tests passed?
+- What caused failures — ambiguous specification, missing context, or component too large?
+- Would further decomposition have reduced the number of attempts?
+- Did the AI introduce any behavior not in the specification? If so, was it caught by the tests?
+- Is the generated code readable, or does it need restructuring before review?
+
+## Process
+
+- How long did each step take — specification writing, test writing, generation, review?
+- What would the team do differently next time?
+- Is the specification strong enough to survive regeneration by a different AI model?
+- Did the team discover business rules that were previously undocumented?
+- Are there reusable patterns from this feature that should be captured for future specifications?
+
+Use this checklist in the Week 5 retrospective (Section 6) and after every subsequent STDD feature. Over time, the team will develop intuition for what makes a strong specification, and the checklist becomes a quick confirmation rather than a discovery exercise.
 
 ---
 
