@@ -16,11 +16,12 @@ Date: 2026
 - [4. Writing Specifications](#4-writing-specifications)
 - [5. Writing Behavioral Tests](#5-writing-behavioral-tests)
 - [6. Using AI to Generate Implementations](#6-using-ai-to-generate-implementations)
-- [7. Continuous Integration with STDD](#7-continuous-integration-with-stdd)
-- [8. Regeneration in Practice](#8-regeneration-in-practice)
-- [9. Team Roles in STDD](#9-team-roles-in-stdd)
-- [10. Example Development Cycle](#10-example-development-cycle)
-- [11. Conclusion](#11-conclusion)
+- [7. Decomposition and the Specification Pyramid](#7-decomposition-and-the-specification-pyramid)
+- [8. Continuous Integration with STDD](#8-continuous-integration-with-stdd)
+- [9. Regeneration in Practice](#9-regeneration-in-practice)
+- [10. Team Roles in STDD](#10-team-roles-in-stdd)
+- [11. Example Development Cycle](#11-example-development-cycle)
+- [12. Conclusion](#12-conclusion)
 
 ---
 
@@ -220,7 +221,55 @@ The implementation is accepted only if all tests pass.
 
 ---
 
-# 7. Continuous Integration with STDD
+# 7. Decomposition and the Specification Pyramid
+
+STDD's regeneration model works because each unit of code is small enough to generate reliably. A 50-line function with a clear specification and 5 tests is trivially regenerable. A 5000-line function is not.
+
+This is not accidental. The discipline of writing precise specifications naturally produces small, focused functions. If a function is hard to specify, it is doing too much.
+
+## The Rule
+
+**Every function has a single responsibility and fits within approximately 50 lines.** If a function is larger, decompose it into smaller functions, each with its own specification and tests.
+
+This applies to both humans and AI. When prompting AI to generate implementations, include this constraint explicitly:
+
+```
+Each function must have a single responsibility.
+No function should exceed approximately 50 lines.
+If a task requires more, decompose it into smaller functions
+that each have their own clear inputs, outputs, and tests.
+```
+
+## Testing the Composition
+
+Small functions alone are not enough. They must be tested together.
+
+The **specification pyramid** defines four levels of testing:
+
+| Level | What it tests | Example |
+|-------|--------------|---------|
+| Unit | Single function in isolation | `calculate_price` returns correct decimal |
+| Component | Multiple functions within one module | `ReservationService` handles hold-to-confirm flow |
+| Integration | Multiple components collaborating | Confirmation uses pricing and updates inventory |
+| System | Full end-to-end workflow | Customer lists seats, holds, confirms, seat disappears from list |
+
+Each level has its own specifications and its own tests. The traceability matrix includes entries at all levels.
+
+## Why This Matters for Regeneration
+
+When you regenerate a function, the unit tests verify the function still works. But the integration and system tests verify it still works **within the larger system**. Without integration tests, a regenerated function could pass all its unit tests while breaking a workflow that depends on it.
+
+The specification pyramid makes regeneration safe at any scale:
+
+1. Regenerate one function → unit tests verify the function
+2. Integration tests verify it still works with other components
+3. System tests verify the end-to-end workflow still passes
+
+For a detailed explanation of the pyramid model, see the [Method](method.md), Section 10. For a worked example, see [Seat Reservation API](../examples/seat-reservation.md).
+
+---
+
+# 8. Continuous Integration with STDD
 
 STDD integrates naturally with CI pipelines.
 
@@ -240,7 +289,7 @@ Tests act as the gatekeeper for system behavior.
 
 ---
 
-# 8. Regeneration in Practice
+# 9. Regeneration in Practice
 
 If an implementation becomes complex or difficult to maintain, it can be regenerated.
 
@@ -256,7 +305,7 @@ This allows systems to evolve without risking behavioral regressions.
 
 ---
 
-# 9. Team Roles in STDD
+# 10. Team Roles in STDD
 
 STDD changes how teams collaborate.
 
@@ -276,7 +325,7 @@ This creates a clear separation between **system definition** and **system imple
 
 ---
 
-# 10. Example Development Cycle
+# 11. Example Development Cycle
 
 A typical STDD development cycle:
 
@@ -291,7 +340,7 @@ This loop can repeat as the system evolves.
 
 ---
 
-# 11. Conclusion
+# 12. Conclusion
 
 STDD provides a structured way to combine human engineering insight with AI code generation.
 

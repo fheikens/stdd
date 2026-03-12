@@ -22,7 +22,8 @@ Date: 2026
 - [10. Mixing Architecture and Behavior](#10-mixing-architecture-and-behavior)
 - [11. Ignoring Regeneration](#11-ignoring-regeneration)
 - [12. Untraceable Specification‑to‑Test Mapping](#12-untraceable-specificationtotest-mapping)
-- [13. Conclusion](#13-conclusion)
+- [13. Unit Tests Without Integration Tests](#13-unit-tests-without-integration-tests)
+- [14. Conclusion](#14-conclusion)
 
 ---
 
@@ -269,7 +270,36 @@ For detailed strategies on closing this gap, see [Writing Specifications](../doc
 
 ---
 
-# 13. Conclusion
+# 13. Unit Tests Without Integration Tests
+
+Every function passes its unit tests. The system still fails.
+
+This happens when tests only verify individual functions in isolation, without testing how components interact. Each function works correctly on its own, but bugs hide in the gaps between them:
+
+- A pricing function returns the correct price, but the reservation service interprets the return value differently.
+- A hold function updates seat status correctly, but the listing function reads stale data because it does not trigger expiry processing first.
+- A cancellation function releases a seat, but no test verifies that another customer can actually book that released seat.
+
+These are **composition bugs**. They are invisible to unit tests because each unit behaves correctly. They only appear when components interact.
+
+The fix is the **specification pyramid**: write specifications and tests at four levels.
+
+1. **Unit** — single function, single responsibility.
+2. **Component** — multiple functions within one component working together.
+3. **Integration** — multiple components collaborating across boundaries.
+4. **System** — full end-to-end workflows as the user experiences them.
+
+Each level has its own specifications, its own tests, and its own entries in the traceability matrix.
+
+Unit tests verify that each part works. Integration tests verify that the parts work together. System tests verify that the whole workflow produces the correct outcome. All three are required for safe regeneration.
+
+Without integration and system tests, regenerating a single function may pass all unit tests while breaking a workflow that depends on it.
+
+For the full specification pyramid model, see the [Method](../docs/method.md), Section 10. For a worked example showing all four test levels, see [Seat Reservation API](../examples/seat-reservation.md).
+
+---
+
+# 14. Conclusion
 
 STDD works best when its principles are followed consistently.
 

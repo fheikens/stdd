@@ -19,8 +19,9 @@ Date: 2026
 - [7. Role of AI](#7-role-of-ai)
 - [8. Code Generation Cycle](#8-code-generation-cycle)
 - [9. Regeneration Loop](#9-regeneration-loop)
-- [10. Maintaining System Stability](#10-maintaining-system-stability)
-- [11. Example STDD Workflow](#11-example-stdd-workflow)
+- [10. The Specification Pyramid](#10-the-specification-pyramid)
+- [11. Maintaining System Stability](#11-maintaining-system-stability)
+- [12. Example STDD Workflow](#12-example-stdd-workflow)
 
 ---
 
@@ -299,7 +300,80 @@ System stability comes from the specification and tests, not from preserving the
 
 ---
 
-# 10. Maintaining System Stability
+# 10. The Specification Pyramid
+
+A single well-specified function is easy to regenerate. But real systems are not single functions. They are compositions: functions call other functions, components depend on components, services interact across boundaries.
+
+The specification pyramid ensures that compositions are tested, not just individual parts.
+
+## Four Levels
+
+```
+        ┌─────────────┐
+        │   System     │  Full workflows across all components
+        │   Specs      │  "Customer holds seat, confirms, receives ticket"
+        ├─────────────┤
+        │  Integration │  Multiple components working together
+        │   Specs      │  "Confirmation uses pricing and updates inventory"
+        ├─────────────┤
+        │  Component   │  One component, internal function interactions
+        │   Specs      │  "ReservationService handles hold-to-confirm flow"
+        ├─────────────┤
+        │    Unit      │  Single function, one responsibility
+        │    Specs     │  "calculate_price returns correct decimal"
+        └─────────────┘
+```
+
+**Unit level.** A single function with a single responsibility. Maximum ~50 lines. Clear inputs, outputs, invariants, and failure conditions. This is the most common level in any STDD project, and the easiest to regenerate.
+
+**Component level.** Multiple functions within one component working together. For example, `ReservationService.hold_seat()` internally checks seat availability, creates a hold record, and updates seat status. A component-level test verifies the sequence produces the correct outcome without testing each internal step separately.
+
+**Integration level.** Multiple components collaborating. For example, confirming a reservation requires the `ReservationService`, the `PricingEngine`, and the `SeatInventory` to interact correctly. Integration tests verify that the contracts between components hold.
+
+**System level.** Full end-to-end workflows that cross all components. For example: customer lists seats, holds one, confirms it, and the seat disappears from the available list. System tests verify that the complete user-visible behavior works as specified.
+
+## Each Level Has Its Own Specifications
+
+This is the key principle. You do not simply write unit tests and hope the composition works. You write specifications at each level.
+
+A unit specification says: "calculate_price returns the base price multiplied by the event multiplier, with group discount applied for groups of 4 or more."
+
+An integration specification says: "When a hold is confirmed, the price returned to the customer matches the price that would be calculated by the PricingEngine for that seat's section and event."
+
+A system specification says: "After a customer confirms a reservation, the seat no longer appears in the available seats list for that event."
+
+Each specification has its own tests. Each test maps back to its specification through the traceability matrix.
+
+## Why Unit Tests Alone Are Not Enough
+
+Unit tests verify that each function does the right thing in isolation. But bugs hide in the gaps between functions:
+
+- **Contract mismatches.** Function A returns a value that function B interprets differently. Both pass their unit tests.
+- **Ordering assumptions.** Component A assumes it is called before component B. Nothing in the unit tests enforces this.
+- **State leakage.** One component modifies shared state in a way another component does not expect.
+- **Timing dependencies.** A hold expiry check and a confirmation check race against each other. Each works individually.
+
+Integration and system tests catch these bugs because they test the composition, not just the parts.
+
+## Guiding AI with the Pyramid
+
+When instructing AI to generate implementations, the specification pyramid provides natural decomposition guidance:
+
+1. **Start with the system specification.** Define the end-to-end workflow the user expects.
+2. **Identify the components** needed to fulfill that workflow.
+3. **Specify each component** with its own inputs, outputs, and failure conditions.
+4. **Specify each function** within each component.
+5. **Write tests at every level** — unit, component, integration, system.
+
+The AI receives the specifications and tests for one unit at a time. Each unit is small enough to regenerate reliably. But the integration and system tests verify that the regenerated unit still works within the larger system.
+
+This is what makes regeneration safe at scale: not just unit tests, but a full pyramid of specifications and tests that catch composition bugs.
+
+For a worked example showing all four levels in practice, see [Seat Reservation API](../examples/seat-reservation.md).
+
+---
+
+# 11. Maintaining System Stability
 
 System stability in STDD is guaranteed by three elements.
 
@@ -325,7 +399,7 @@ This ensures system behavior evolves in a controlled and verifiable way.
 
 ---
 
-# 11. Example STDD Workflow
+# 12. Example STDD Workflow
 
 A simple STDD development cycle:
 

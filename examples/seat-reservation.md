@@ -668,6 +668,14 @@ Every specification statement maps to at least one test. Every test maps back to
 | NFR-DECIMAL | Decimal arithmetic in pricing | `test_nfr_decimal_arithmetic` |
 | NFR-CLOCK | Injectable clock for expiry | `test_nfr_injectable_clock` |
 | NFR-CONCURRENT | Concurrent hold handling | `test_nfr_concurrent_holds` |
+| INT-01 | Confirmation price matches PricingEngine | `test_integration_confirm_uses_correct_pricing` |
+| INT-02 | Expired hold allows rebook by another customer | `test_integration_expiry_then_rebook` |
+| INT-03 | Cancelled hold allows rebook | `test_integration_cancel_then_rebook` |
+| INT-04 | Expiry during confirmation releases seat for others | `test_integration_expired_hold_does_not_confirm` |
+| SYS-01 | Full booking workflow end-to-end | `test_system_full_booking_workflow` |
+| SYS-02 | Two customers compete for same seat | `test_system_competing_customers` |
+| SYS-03 | Hold expires, another customer books same seat | `test_system_hold_expire_rebook_confirm` |
+| SYS-04 | Full cycle: book, cancel, rebook by different customer | `test_system_cancel_and_rebook_full_cycle` |
 
 ---
 
@@ -1038,6 +1046,160 @@ def test_nfr_concurrent_holds(inventory):
     # Second hold for same seat fails
     with pytest.raises(ValueError, match="Seat is not available"):
         service.hold_seat("concert-1", "S1", "cust-2")
+
+
+# ---------------------------------------------------------------------------
+# Integration Tests — Multiple components working together
+# ---------------------------------------------------------------------------
+
+def test_integration_confirm_uses_correct_pricing(inventory):
+    """INT-01: Confirmation price matches PricingEngine for the seat's section."""
+    _, service, pricing = inventory
+
+    hold = service.hold_seat("concert-1", "S1", "cust-1")
+    result = service.confirm_reservation(hold["hold_id"], "cust-1")
+
+    # S1 is in "orchestra" section, concert-1 has multiplier 1.5
+    expected = pricing.calculate("orchestra", "concert-1", group_size=1)
+    assert result["final_price"] == expected["unit_price"]
+
+
+def test_integration_expiry_then_rebook(inventory, clock):
+    """INT-02: After a hold expires, another customer can hold the same seat."""
+    inv, service, _ = inventory
+
+    # Customer 1 holds seat
+    service.hold_seat("concert-1", "S1", "cust-1")
+
+    # Hold expires
+    clock.advance(minutes=11)
+    service.process_expired_holds()
+
+    # Customer 2 can now hold the same seat
+    result = service.hold_seat("concert-1", "S1", "cust-2")
+    assert "hold_id" in result
+    assert inv.get_seat_status("concert-1", "S1") == "held"
+
+
+def test_integration_cancel_then_rebook(inventory):
+    """INT-03: After cancellation, another customer can hold the same seat."""
+    _, service, _ = inventory
+
+    hold = service.hold_seat("concert-1", "S1", "cust-1")
+    service.cancel(hold["hold_id"], "cust-1")
+
+    result = service.hold_seat("concert-1", "S1", "cust-2")
+    assert "hold_id" in result
+
+
+def test_integration_expired_hold_does_not_confirm(inventory, clock):
+    """INT-04: Expiry and confirmation interact correctly under time pressure."""
+    inv, service, _ = inventory
+
+    hold = service.hold_seat("concert-1", "S1", "cust-1")
+    clock.advance(minutes=11)
+
+    # Confirmation fails because hold expired
+    with pytest.raises(ValueError, match="Hold has expired"):
+        service.confirm_reservation(hold["hold_id"], "cust-1")
+
+    # Seat is available again — expiry was handled during confirmation
+    assert inv.get_seat_status("concert-1", "S1") == "available"
+
+    # Another customer can now book it
+    new_hold = service.hold_seat("concert-1", "S1", "cust-2")
+    assert "hold_id" in new_hold
+
+
+# ---------------------------------------------------------------------------
+# System Tests — Full end-to-end workflows
+# ---------------------------------------------------------------------------
+
+def test_system_full_booking_workflow(inventory, clock):
+    """SYS-01: Complete workflow — list, hold, confirm, verify unavailable."""
+    inv, service, _ = inventory
+
+    # Step 1: Customer sees available seats
+    available = service.list_available_seats("concert-1")
+    assert len(available) == 3
+
+    # Step 2: Customer holds a seat
+    hold = service.hold_seat("concert-1", "S1", "cust-1")
+
+    # Step 3: Seat no longer appears in available list
+    available = service.list_available_seats("concert-1")
+    seat_ids = [s["seat_id"] for s in available]
+    assert "S1" not in seat_ids
+    assert len(available) == 2
+
+    # Step 4: Customer confirms within time limit
+    clock.advance(minutes=5)
+    result = service.confirm_reservation(hold["hold_id"], "cust-1")
+    assert "reservation_id" in result
+    assert result["final_price"] == Decimal("150.00")
+
+    # Step 5: Seat is still not available
+    available = service.list_available_seats("concert-1")
+    seat_ids = [s["seat_id"] for s in available]
+    assert "S1" not in seat_ids
+
+
+def test_system_competing_customers(inventory, clock):
+    """SYS-02: Two customers compete for the same seat — only one wins."""
+    inv, service, _ = inventory
+
+    # Customer 1 holds the seat
+    hold = service.hold_seat("concert-1", "S1", "cust-1")
+
+    # Customer 2 tries and fails
+    with pytest.raises(ValueError, match="Seat is not available"):
+        service.hold_seat("concert-1", "S1", "cust-2")
+
+    # Customer 1 confirms
+    result = service.confirm_reservation(hold["hold_id"], "cust-1")
+    assert "reservation_id" in result
+
+    # Customer 2 still cannot get it
+    with pytest.raises(ValueError, match="Seat is not available"):
+        service.hold_seat("concert-1", "S1", "cust-2")
+
+
+def test_system_hold_expire_rebook_confirm(inventory, clock):
+    """SYS-03: Hold expires, another customer books and confirms the same seat."""
+    inv, service, _ = inventory
+
+    # Customer 1 holds but doesn't confirm
+    service.hold_seat("concert-1", "S1", "cust-1")
+    clock.advance(minutes=11)
+
+    # Customer 2 sees the seat is available (expiry processed during list)
+    available = service.list_available_seats("concert-1")
+    seat_ids = [s["seat_id"] for s in available]
+    assert "S1" in seat_ids
+
+    # Customer 2 holds and confirms
+    hold2 = service.hold_seat("concert-1", "S1", "cust-2")
+    result = service.confirm_reservation(hold2["hold_id"], "cust-2")
+    assert result["final_price"] == Decimal("150.00")
+    assert inv.get_seat_status("concert-1", "S1") == "reserved"
+
+
+def test_system_cancel_and_rebook_full_cycle(inventory, clock):
+    """SYS-04: Full cycle — book, cancel, rebook by different customer."""
+    inv, service, _ = inventory
+
+    # Customer 1 books
+    hold1 = service.hold_seat("concert-1", "S1", "cust-1")
+    res1 = service.confirm_reservation(hold1["hold_id"], "cust-1")
+
+    # Customer 1 cancels
+    service.cancel(res1["reservation_id"], "cust-1")
+    assert inv.get_seat_status("concert-1", "S1") == "available"
+
+    # Customer 2 books the same seat
+    hold2 = service.hold_seat("concert-1", "S1", "cust-2")
+    res2 = service.confirm_reservation(hold2["hold_id"], "cust-2")
+    assert inv.get_seat_status("concert-1", "S1") == "reserved"
 ```
 
 At this point, every test fails. No implementation exists yet. This is exactly where STDD says you should be.
@@ -1284,11 +1446,19 @@ test_invariant_price_deterministic PASSED
 test_nfr_decimal_arithmetic        PASSED
 test_nfr_injectable_clock          PASSED
 test_nfr_concurrent_holds          PASSED
+test_integration_confirm_pricing   PASSED
+test_integration_expiry_then_rebook PASSED
+test_integration_cancel_then_rebook PASSED
+test_integration_expired_hold      PASSED
+test_system_full_booking_workflow   PASSED
+test_system_competing_customers    PASSED
+test_system_hold_expire_rebook     PASSED
+test_system_cancel_and_rebook      PASSED
 
-24 passed in 0.08s
+32 passed in 0.08s
 ```
 
-All 24 tests pass. The implementation is accepted.
+All 32 tests pass. The implementation is accepted.
 
 ---
 
@@ -1363,10 +1533,10 @@ Run the tests again:
 ```
 $ pytest test_seat_reservation.py -v
 
-24 passed in 0.08s
+32 passed in 0.08s
 ```
 
-All 24 tests pass with the regenerated implementation.
+All 32 tests pass with the regenerated implementation.
 
 The internal design is completely different — strategy pattern with a rules chain instead of inline computation. But the behavior is identical, verified by the same test suite.
 
@@ -1388,7 +1558,7 @@ specifications:
   - acceptance_cases (section 7)
 
 tests:
-  - test_seat_reservation.py (24 tests)
+  - test_seat_reservation.py (32 tests)
 
 nfr_constraints:
   - decimal_arithmetic
@@ -1424,7 +1594,9 @@ This walkthrough exercised every part of the STDD methodology on a system with r
 
 **The traceability matrix closes the spec-to-test gap.** Every specification has a test. Every test traces to a specification. There are no untested specs and no orphaned tests.
 
-**Regeneration works.** We discarded the PricingEngine and replaced it with a structurally different implementation. All 24 tests passed. The system's behavior did not change. This is only possible because the knowledge layer (specifications + tests) fully defines the expected behavior.
+**The specification pyramid catches composition bugs.** Unit tests alone would not catch the interaction between hold expiry and confirmation, or verify that the price returned to the customer matches the PricingEngine's calculation. Integration tests verify that components honor their contracts. System tests verify that full workflows produce the correct end-to-end outcome. Bugs hide in the gaps between functions — the pyramid closes those gaps.
+
+**Regeneration works.** We discarded the PricingEngine and replaced it with a structurally different implementation. All 32 tests passed. The system's behavior did not change. This is only possible because the knowledge layer (specifications + tests) fully defines the expected behavior.
 
 **The Specification Fingerprint defines identity.** Two different implementations produce the same behavioral identity because they satisfy the same fingerprint. The implementation is not the system. The specification is.
 
