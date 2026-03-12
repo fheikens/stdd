@@ -164,49 +164,64 @@ Examples:
 
 # 4. Specification Levels
 
-Not all specifications operate at the same level of detail.
+Not all specifications operate at the same level of detail. STDD defines four levels that align with the [specification pyramid](method.md) (Section 10).
 
-STDD recognizes four levels of specification.
+| Level | Scope | Testable? | Example |
+|-------|-------|-----------|---------|
+| System | End-to-end workflows | Yes — system tests | "Customer holds seat, confirms, receives ticket" |
+| Feature | One user-facing capability, often crossing components | Yes — integration tests | "Reserve a seat for a fixed duration" |
+| Component | One module or class | Yes — component tests | "PricingEngine calculates prices" |
+| Unit | One function | Yes — unit tests | "calculate_price returns correct decimal" |
 
 ## 4.1 System Specification
 
-Describes the overall system and its major responsibilities.
+Describes an end-to-end workflow as the user experiences it.
 
 Example:
 
-> The system is an event ticketing platform. It allows users to browse events, reserve seats, and complete purchases.
+> The customer browses available seats for an event, holds a seat, confirms the reservation within the hold period, and receives a confirmation with the final price. After confirmation, the seat no longer appears in the available list.
 
-A system specification is not directly testable. It provides context for feature specifications.
+System specifications are testable. They produce system-level tests that verify the full workflow across all components.
 
 ## 4.2 Feature Specification
 
-Describes a single user-facing feature.
+Describes a single user-facing feature. A feature typically involves multiple components working together.
 
 Example:
 
 > The system must allow users to reserve a seat for a fixed duration. A reserved seat cannot be reserved by another user until the reservation expires or is released.
 
-Feature specifications are the primary unit of work in STDD. They produce behavioral tests and drive implementation generation.
+Feature specifications are the primary unit of work in STDD. They produce integration tests that verify components collaborate correctly, and behavioral tests that drive implementation generation.
 
 ## 4.3 Component Specification
 
-Describes a technical component or service.
+Describes a single technical component, module, or class.
 
 Example:
 
 > The pricing engine must calculate the total cost of a set of line items including applicable taxes and discounts. It must accept a list of items and a pricing context and return a breakdown of subtotal, tax, discount, and total.
 
-Component specifications are used when a feature is large enough to require multiple independent parts.
+Component specifications are used when a feature is large enough to require multiple independent parts. They produce component tests that verify internal function interactions within the module.
 
-## 4.4 Contract Specification
+## 4.4 Unit Specification
 
-Describes the interface between two components.
+Describes a single function with a single responsibility.
+
+Example:
+
+> calculate_price accepts a section name, event identifier, and group size. It returns a unit price and total price. Group discount of 10% applies for groups of 4 or more. Prices are rounded to 2 decimal places. Returns an error for unknown sections or group sizes below 1.
+
+Unit specifications are the most common level. Every function that has non-trivial logic should have one. They produce unit tests — the base of the pyramid.
+
+## Contracts Between Components
+
+When two components interact, their shared interface should be specified explicitly. A contract defines what one component provides and what the other expects.
 
 Example:
 
 > The payment service accepts a PaymentRequest containing amount, currency, and payment method. It returns a PaymentResult containing status (success, declined, error) and a transaction identifier.
 
-Contract specifications define the boundary between components. They enable independent testing and regeneration of each side.
+Contracts are tested at the integration level. They enable independent testing and regeneration of each side — as long as both sides honor the contract, either can be replaced.
 
 ---
 
@@ -711,7 +726,44 @@ See: acceptance_cases.yaml
 [Any threshold changes with justification]
 ```
 
-## Contract Specification Template
+## Unit Specification Template
+
+```markdown
+Unit: [Function Name]
+Component: [Parent component]
+Version: 1.0
+
+---
+
+## Description
+
+[What this function does in one sentence]
+
+## Inputs
+
+- [param]: [type] - [description and constraints]
+
+## Output
+
+- [return]: [type] - [description]
+
+## Behavioral Scenarios
+
+### Scenario: [normal case]
+  Given: [precondition]
+  When: [action]
+  Then: [expected outcome]
+
+## Invariants
+
+- [Rule that must always hold]
+
+## Failure Conditions
+
+- [Condition]: [expected behavior]
+```
+
+## Integration Contract Template
 
 ```markdown
 Contract: [Name]

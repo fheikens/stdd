@@ -11,17 +11,12 @@ Date: 2026
 ## Table of Contents
 
 - [1. Introduction](#1-introduction)
-- [2. STDD in a Real Development Workflow](#2-stdd-in-a-real-development-workflow)
-- [3. Typical Repository Structure](#3-typical-repository-structure)
-- [4. Writing Specifications](#4-writing-specifications)
-- [5. Writing Behavioral Tests](#5-writing-behavioral-tests)
-- [6. Using AI to Generate Implementations](#6-using-ai-to-generate-implementations)
-- [7. Decomposition and the Specification Pyramid](#7-decomposition-and-the-specification-pyramid)
-- [8. Continuous Integration with STDD](#8-continuous-integration-with-stdd)
-- [9. Regeneration in Practice](#9-regeneration-in-practice)
-- [10. Team Roles in STDD](#10-team-roles-in-stdd)
-- [11. Example Development Cycle](#11-example-development-cycle)
-- [12. Conclusion](#12-conclusion)
+- [2. Repository Structure](#2-repository-structure)
+- [3. Test-First Prompting (TFP)](#3-test-first-prompting-tfp)
+- [4. Decomposition and the Specification Pyramid](#4-decomposition-and-the-specification-pyramid)
+- [5. Continuous Specification Integrity (CSI)](#5-continuous-specification-integrity-csi)
+- [6. Team Roles in STDD](#6-team-roles-in-stdd)
+- [7. Conclusion](#7-conclusion)
 
 ---
 
@@ -43,31 +38,7 @@ The goal is to make STDD usable in everyday software engineering.
 
 ---
 
-# 2. STDD in a Real Development Workflow
-
-Traditional development often follows this pattern:
-
-Design → Code → Test → Fix
-
-STDD changes the order.
-
-The STDD workflow is:
-
-Specification → Behavior → Tests → AI Implementation → Verification
-
-In practice this means:
-
-1. Engineers define the specification.
-2. Engineers write tests describing the expected behavior.
-3. AI generates the implementation.
-4. Tests verify the implementation.
-5. If tests fail, the implementation is regenerated.
-
-The key idea is that **tests define the system behavior before the code exists**.
-
----
-
-# 3. Typical Repository Structure
+# 2. Repository Structure
 
 An STDD project benefits from a clear repository structure.
 
@@ -106,122 +77,83 @@ The implementation satisfies the tests.
 
 ---
 
-# 4. Writing Specifications
-
-Specifications describe **what the system must do**.
-
-They must be:
-
-- precise
-- unambiguous
-- testable
-- independent of implementation details
-
-A specification answers six questions:
-
-1. What does the system do?
-2. What are the inputs and outputs?
-3. What are the behavioral scenarios?
-4. What are the invariants?
-5. What are the failure conditions?
-6. What are the constraints?
-
-Example specification:
-
-```
-Feature: Shopping Cart Total
-Version: 1.0
-Status: accepted
-
-## Description
-
-The system must calculate the total price of items in a shopping cart including tax.
-The tax rate must be configurable per request.
-
-## Inputs
-
-- items: list of numeric prices
-- tax_rate: decimal between 0 and 1
-
-## Outputs
-
-- total: decimal
-
-## Behavioral Scenarios
-
-Scenario: Normal cart with tax
-  Given: Items [10, 20] and tax rate 0.10
-  When: Total is calculated
-  Then: Result is 33
-
-Scenario: Empty cart
-  Given: Items [] and tax rate 0.10
-  When: Total is calculated
-  Then: Result is 0
-
-Scenario: Zero tax rate
-  Given: Items [10, 20] and tax rate 0.0
-  When: Total is calculated
-  Then: Result is 30
-
-## Invariants
-
-- The total must never be negative.
-- The total must equal subtotal + (subtotal * tax_rate).
-
-## Failure Conditions
-
-- Negative prices: rejected with validation error.
-- Tax rate outside 0-1 range: rejected with validation error.
-```
-
-For comprehensive guidance on writing specifications, see [Writing Specifications](writing-specifications.md).
+For detailed guidance on writing specifications, see [Writing Specifications](writing-specifications.md). For the core workflow and principles, see the [Method](method.md).
 
 ---
 
-# 5. Writing Behavioral Tests
+# 3. Test-First Prompting (TFP)
 
-Tests translate specifications into executable checks.
+Test-First Prompting is the practice of giving AI the specification and failing tests, then letting it generate implementations until the tests pass.
 
-Example test:
+## The Prompt Structure
 
-```python
-def test_total_price():
-    assert calculate_total([10,20], 0.10) == 33
+An effective TFP prompt has four parts:
+
+1. **Specification** — what the function/component must do
+2. **Tests** — the failing test suite that defines correct behavior
+3. **Constraints** — NFRs, language requirements, decomposition rules
+4. **Context** — related components, contracts, integration points
+
+## Example: Simple Function
+
+```
+Specification:
+calculate_price accepts a section name, event identifier, and group size.
+It returns a unit price and total price. Group discount of 10% applies for
+groups of 4 or more. Prices are rounded to 2 decimal places.
+
+Tests:
+[paste the relevant test functions]
+
+Constraints:
+- Use Decimal arithmetic, not float
+- Single responsibility, no more than 50 lines
+- Raise ValueError for invalid inputs
+
+Generate a Python function that passes all tests.
 ```
 
-Tests should cover:
+## Example: Component with Dependencies
 
-- normal behavior
-- edge cases
-- boundary conditions
-- failure scenarios
+```
+Specification:
+ReservationService manages seat holds, confirmations, and cancellations.
+It depends on SeatInventory (tracks seat status) and PricingEngine
+(calculates prices). It accepts a clock dependency for time operations.
 
-Tests define the **true behavior of the system**.
+Contracts:
+- SeatInventory provides: get_seat_status, set_seat_status, list_available
+- PricingEngine provides: calculate(section, event_id, group_size)
+- Clock provides: now()
+
+Tests:
+[paste the full test suite]
+
+Constraints:
+- Each method has a single responsibility
+- No method exceeds 50 lines
+- All state changes must be atomic
+- Use the injectable clock for all time comparisons
+
+Generate a Python class that passes all tests.
+```
+
+## When Tests Fail
+
+If AI generates code that fails tests:
+
+1. **Check the test output.** The failing tests tell you which specification the AI violated.
+2. **Refine the prompt.** Add more context, highlight the constraint that was missed, or break the task into smaller pieces.
+3. **Never weaken the test.** The test represents the specification. If the AI cannot satisfy it, the prompt needs work — not the test.
+4. **Decompose further.** If a component is too complex for AI to generate correctly, break it into smaller units with their own specs and tests. Generate each unit separately.
+
+## What TFP Is Not
+
+TFP is not "ask AI to write code and then add tests." The tests exist before the AI sees the task. The AI's job is to satisfy existing tests, not to co-create them.
 
 ---
 
-# 6. Using AI to Generate Implementations
-
-Once specifications and tests exist, AI can generate implementations.
-
-Example prompt to AI:
-
-"Generate a Python function that satisfies the provided tests."
-
-Possible implementation:
-
-```python
-def calculate_total(items, tax_rate):
-    subtotal = sum(items)
-    return subtotal + subtotal * tax_rate
-```
-
-The implementation is accepted only if all tests pass.
-
----
-
-# 7. Decomposition and the Specification Pyramid
+# 4. Decomposition and the Specification Pyramid
 
 STDD's regeneration model works because each unit of code is small enough to generate reliably. A 50-line function with a clear specification and 5 tests is trivially regenerable. A 5000-line function is not.
 
@@ -269,87 +201,145 @@ For a detailed explanation of the pyramid model, see the [Method](method.md), Se
 
 ---
 
-# 8. Continuous Integration with STDD
+# 5. Continuous Specification Integrity (CSI)
 
-STDD integrates naturally with CI pipelines.
+Continuous Specification Integrity is the CI/CD practice that ensures specifications, tests, and implementations never drift apart.
 
-Typical pipeline:
+## The CSI Pipeline
 
-1. Run test suite
-2. Verify all tests pass
-3. Reject failing implementations
+A standard STDD CI pipeline enforces three gates:
 
-Example CI workflow:
+```
+┌─────────────────────────────────────────────────┐
+│ 1. Specification Validation                      │
+│    - Every spec has at least one test            │
+│    - Every test maps to a spec (traceability)    │
+│    - No orphaned tests or untested specs         │
+├─────────────────────────────────────────────────┤
+│ 2. Test Execution                                │
+│    - All unit tests pass                         │
+│    - All integration tests pass                  │
+│    - All system tests pass                       │
+├─────────────────────────────────────────────────┤
+│ 3. Fingerprint Verification                      │
+│    - Compute specification fingerprint           │
+│    - Compare against previous fingerprint        │
+│    - Flag if specs changed without test updates  │
+│    - Flag if tests changed without spec updates  │
+└─────────────────────────────────────────────────┘
+```
 
-- push code
-- run tests
-- accept or reject build
+## Example: GitHub Actions
 
-Tests act as the gatekeeper for system behavior.
+```yaml
+name: STDD CI
+on: [push, pull_request]
+
+jobs:
+  specification-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate traceability matrix
+        run: python scripts/validate_traceability.py
+
+      - name: Run test suite
+        run: pytest tests/ -v --tb=short
+
+      - name: Compute specification fingerprint
+        run: python scripts/compute_fingerprint.py --compare
+```
+
+## Specification Fingerprint in CI
+
+The Specification Fingerprint is a hash of the knowledge layer that detects drift.
+
+### Computing the Fingerprint
+
+```python
+import hashlib
+import pathlib
+
+def compute_fingerprint(spec_dir, test_dir, nfr_file):
+    """Hash all specification and test files to produce a fingerprint."""
+    hasher = hashlib.sha256()
+
+    for directory in [spec_dir, test_dir]:
+        for filepath in sorted(pathlib.Path(directory).rglob("*")):
+            if filepath.is_file():
+                hasher.update(filepath.read_bytes())
+
+    if pathlib.Path(nfr_file).exists():
+        hasher.update(pathlib.Path(nfr_file).read_bytes())
+
+    return hasher.hexdigest()
+```
+
+### What the Fingerprint Detects
+
+| Change | Fingerprint | Action |
+|--------|------------|--------|
+| Spec changed, tests updated | New fingerprint | Accept — intentional evolution |
+| Spec changed, tests unchanged | New fingerprint | Warning — possible spec-to-test gap |
+| Tests changed, spec unchanged | New fingerprint | Warning — tests may have drifted from spec |
+| Implementation changed, spec and tests unchanged | Same fingerprint | Accept — regeneration, no behavioral change |
+| Nothing changed | Same fingerprint | Accept — no action needed |
+
+### Storing Fingerprints
+
+Store the current fingerprint in a file committed alongside the knowledge layer:
+
+```
+features/
+├── seat-reservation/
+│   ├── specification.md
+│   ├── acceptance_cases.yaml
+│   ├── .fingerprint          ← computed hash
+│   └── tests/
+│       └── test_reservation.py
+```
+
+The CI pipeline computes a fresh fingerprint and compares it to the stored one. If they differ, the PR must include both spec and test changes — or explicitly justify why only one changed.
+
+## Traceability Validation
+
+A simple traceability check ensures every spec ID appears in at least one test docstring:
+
+```python
+import re
+import pathlib
+
+def validate_traceability(spec_file, test_dir):
+    """Check that every spec ID in the traceability matrix has a test."""
+    spec_ids = set(re.findall(r"^\| (\w+-\d+)", spec_file.read_text(), re.MULTILINE))
+    test_content = "".join(
+        f.read_text() for f in pathlib.Path(test_dir).rglob("test_*.py")
+    )
+    untested = {sid for sid in spec_ids if sid not in test_content}
+
+    if untested:
+        raise ValueError(f"Untested specifications: {untested}")
+```
+
+This is a basic implementation. More sophisticated validation can parse test docstrings and cross-reference them against the traceability matrix programmatically.
 
 ---
 
-# 9. Regeneration in Practice
-
-If an implementation becomes complex or difficult to maintain, it can be regenerated.
-
-Process:
-
-1. Keep the specification
-2. Keep the tests
-3. Regenerate the implementation
-4. Run tests
-5. Accept if tests pass
-
-This allows systems to evolve without risking behavioral regressions.
-
----
-
-# 10. Team Roles in STDD
+# 6. Team Roles in STDD
 
 STDD changes how teams collaborate.
 
-Engineers focus on:
+**Specification authors** (engineers, product owners, domain experts) define what the system must do. They write specifications, behavioral scenarios, invariants, and acceptance cases.
 
-- defining behavior
-- designing specifications
-- writing tests
+**Test authors** (engineers, QA) translate specifications into executable tests at all pyramid levels. They maintain the traceability matrix and close the spec-to-test gap.
 
-AI focuses on:
+**AI** generates implementations that pass the tests. It also assists with refactoring, optimization, and translation across languages.
 
-- generating implementations
-- refactoring code
-- optimizing performance
-
-This creates a clear separation between **system definition** and **system implementation**.
+**Reviewers** validate that specifications are precise, tests are faithful to specs, and the traceability matrix has no gaps. PR reviews in STDD focus on the knowledge layer first, implementation second.
 
 ---
 
-# 11. Example Development Cycle
+# 7. Conclusion
 
-A typical STDD development cycle:
-
-1. Write specification
-2. Write tests
-3. Generate implementation with AI
-4. Run tests
-5. Accept implementation if tests pass
-6. Regenerate if tests fail
-
-This loop can repeat as the system evolves.
-
----
-
-# 12. Conclusion
-
-STDD provides a structured way to combine human engineering insight with AI code generation.
-
-By placing **behavior at the center of development**, STDD ensures that systems remain stable even as implementations evolve.
-
-Specifications define the system.
-
-Tests enforce the behavior.
-
-AI generates the implementation.
-
-This allows engineering teams to build reliable software in an era where code can be generated instantly.
+This playbook covers the practical aspects of applying STDD: repository structure, test-first prompting, decomposition, CSI pipelines, and team roles. For the underlying principles, see the [Method](method.md). For a complete worked example, see the [Seat Reservation API](../examples/seat-reservation.md).

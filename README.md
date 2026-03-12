@@ -91,7 +91,6 @@ Start with the manifesto and method. Then go deeper based on your role.
 |----------|-------------|
 | [Anti-Patterns](reference/anti-patterns.md) | Common mistakes and how to avoid them |
 | [STDD vs Existing Methods](reference/vs-existing-methods.md) | Comparison with TDD, BDD, and other approaches |
-| [Why AI Needs STDD](reference/why-ai-needs-stdd.md) | The case for behavioral stability in AI-generated systems |
 
 ### Examples
 
@@ -120,8 +119,7 @@ stdd/
 │
 ├── reference/
 │   ├── anti-patterns.md
-│   ├── vs-existing-methods.md
-│   └── why-ai-needs-stdd.md
+│   └── vs-existing-methods.md
 │
 ├── examples/
 │   ├── seat-reservation.md

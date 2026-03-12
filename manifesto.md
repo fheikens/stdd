@@ -87,6 +87,9 @@ The code or system that satisfies the specification and passes the tests.
 **Specification Fingerprint**
 The cryptographically hashed bundle of specifications, tests, behavioral contracts, and reference results that defines a system's behavioral identity.
 
+**Knowledge Layer**
+The permanent layer above the code: specifications, tests, acceptance cases, invariants, and contracts. The knowledge layer defines the system. Implementations are generated from it and verified against it.
+
 ---
 
 # Core Philosophy
@@ -103,7 +106,7 @@ The cryptographically hashed bundle of specifications, tests, behavioral contrac
 
 **Testable Specification (T-Spec):** Specifications must be written in verifiable Given / When / Then form. If a requirement cannot be expressed this way, it is not ready to build.
 
-**Specification Fingerprint:** The cryptographically hashed bundle containing specification, tests, mappings, contracts, and reference results. This fingerprint defines the system's behavioral identity. Two implementations passing the same fingerprint are equivalent -- regardless of language.
+**Specification Fingerprint:** The fingerprint defined above (see Terminology) is the system's behavioral identity. Two implementations passing the same fingerprint are equivalent — regardless of language, framework, or internal design.
 
 **Test-First Prompting (TFP):** AI receives the specification and failing tests and generates implementations until the tests pass.
 
