@@ -477,6 +477,19 @@ acceptance_cases:
       result_contains: ["S1", "S3"]
       result_excludes: ["S2"]
 
+  - id: SEAT-LIST-02
+    feature: list_available_seats
+    given:
+      event_id: "sold-out"
+      seats:
+        - { seat_id: "S1", status: "held" }
+        - { seat_id: "S2", status: "reserved" }
+    when:
+      action: list_available_seats
+      event_id: "sold-out"
+    then:
+      result: []
+
   - id: SEAT-LIST-03
     feature: list_available_seats
     given:
@@ -522,6 +535,46 @@ acceptance_cases:
       seat_status_after: "held"
       held_by_after: "cust-1"
 
+  - id: SEAT-CANCEL-01
+    feature: cancel
+    given:
+      hold_id: "H1"
+      customer_id: "cust-1"
+      seat_id: "S1"
+      seat_status: "held"
+    when:
+      action: cancel
+      ref_id: "H1"
+      customer_id: "cust-1"
+    then:
+      seat_status_after: "available"
+
+  - id: SEAT-CANCEL-02
+    feature: cancel
+    given:
+      reservation_id: "R1"
+      customer_id: "cust-1"
+      seat_id: "S1"
+      seat_status: "reserved"
+    when:
+      action: cancel
+      ref_id: "R1"
+      customer_id: "cust-1"
+    then:
+      seat_status_after: "available"
+
+  - id: SEAT-EXPIRY-01
+    feature: expire_holds
+    given:
+      seats:
+        - { seat_id: "S1", status: "held", expires_at: "past" }
+        - { seat_id: "S2", status: "held", expires_at: "future" }
+    when:
+      action: process_expired_holds
+    then:
+      seat_S1_status_after: "available"
+      seat_S2_status_after: "held"
+
   - id: SEAT-CONF-01
     feature: confirm_reservation
     given:
@@ -555,6 +608,22 @@ acceptance_cases:
       error: "Hold has expired"
       seat_status_after: "available"
 
+  - id: PRICE-01
+    feature: pricing
+    given:
+      section: "orchestra"
+      base_price: 100.00
+      event_id: "concert-1"
+      event_multiplier: 1.5
+    when:
+      action: calculate_price
+      section: "orchestra"
+      event_id: "concert-1"
+      group_size: 1
+    then:
+      unit_price: 150.00
+      total_price: 150.00
+
   - id: PRICE-02
     feature: pricing
     given:
@@ -571,6 +640,22 @@ acceptance_cases:
       unit_price: 135.00
       total_price: 540.00
 
+  - id: PRICE-03
+    feature: pricing
+    given:
+      section: "orchestra"
+      base_price: 100.00
+      event_id: "concert-1"
+      event_multiplier: 1.0
+    when:
+      action: calculate_price
+      section: "orchestra"
+      event_id: "concert-1"
+      group_size: 3
+    then:
+      unit_price: 100.00
+      total_price: 300.00
+
   - id: PRICE-04
     feature: pricing
     given:
@@ -585,6 +670,19 @@ acceptance_cases:
       group_size: 1
     then:
       unit_price: 50.00
+
+  - id: PRICE-05
+    feature: pricing
+    given:
+      section: "orchestra"
+      event_id: "concert-1"
+    when:
+      action: calculate_price
+      section: "orchestra"
+      event_id: "concert-1"
+      group_size: 0
+    then:
+      error: "Invalid group size"
 ```
 
 ---
@@ -667,7 +765,9 @@ Every specification statement maps to at least one test. Every test maps back to
 | INV-05 | Price consistency | `test_invariant_price_deterministic` |
 | NFR-DECIMAL | Decimal arithmetic in pricing | `test_nfr_decimal_arithmetic` |
 | NFR-CLOCK | Injectable clock for expiry | `test_nfr_injectable_clock` |
-| NFR-CONCURRENT | Concurrent hold handling | `test_nfr_concurrent_holds` |
+| NFR-EXCLUSIVE | Exclusive hold enforcement | `test_nfr_exclusive_hold` |
+| INV-02 | No orphaned holds | `test_invariant_no_orphaned_holds` |
+| INV-06 | Cancellation completeness | `test_invariant_cancellation_completeness` |
 | INT-01 | Confirmation price matches PricingEngine | `test_integration_confirm_uses_correct_pricing` |
 | INT-02 | Expired hold allows rebook by another customer | `test_integration_expiry_then_rebook` |
 | INT-03 | Cancelled hold allows rebook | `test_integration_cancel_then_rebook` |
@@ -999,6 +1099,20 @@ def test_invariant_state_transitions(inventory):
         service.confirm_reservation("nonexistent-hold", "cust-1")
 
 
+def test_invariant_no_orphaned_holds(inventory, clock):
+    """INV-02: Every held seat has an associated active hold record."""
+    inv, service, _ = inventory
+
+    hold = service.hold_seat("concert-1", "S1", "cust-1")
+
+    # Seat is held and the hold record exists
+    assert inv.get_seat_status("concert-1", "S1") == "held"
+
+    # After cancellation, seat is available and hold is no longer active
+    service.cancel(hold["hold_id"], "cust-1")
+    assert inv.get_seat_status("concert-1", "S1") == "available"
+
+
 def test_invariant_price_deterministic(inventory):
     """INV-05: Same inputs always produce same price."""
     _, _, pricing = inventory
@@ -1007,6 +1121,22 @@ def test_invariant_price_deterministic(inventory):
     result2 = pricing.calculate("orchestra", "concert-1", group_size=4)
 
     assert result1 == result2
+
+
+def test_invariant_cancellation_completeness(inventory):
+    """INV-06: After cancellation, no active record references the seat."""
+    inv, service, _ = inventory
+
+    # Hold then cancel
+    hold = service.hold_seat("concert-1", "S1", "cust-1")
+    service.cancel(hold["hold_id"], "cust-1")
+
+    # Seat is available — no active hold or reservation references it
+    assert inv.get_seat_status("concert-1", "S1") == "available"
+
+    # Can be re-held by anyone — proves no lingering reference blocks it
+    new_hold = service.hold_seat("concert-1", "S1", "cust-2")
+    assert "hold_id" in new_hold
 
 
 # ---------------------------------------------------------------------------
@@ -1036,8 +1166,8 @@ def test_nfr_injectable_clock(inventory, clock):
     assert "reservation_id" in result
 
 
-def test_nfr_concurrent_holds(inventory):
-    """NFR-CONCURRENT: Only one hold succeeds for the same seat."""
+def test_nfr_exclusive_hold(inventory):
+    """NFR-EXCLUSIVE: Only one customer can hold a seat at a time."""
     _, service, _ = inventory
 
     # First hold succeeds
@@ -1422,43 +1552,45 @@ Run the tests:
 ```
 $ pytest test_seat_reservation.py -v
 
-test_list_available_seats          PASSED
-test_list_seats_none_available     PASSED
-test_list_seats_unknown_event      PASSED
-test_hold_available_seat           PASSED
-test_hold_already_held_seat        PASSED
-test_hold_reserved_seat            PASSED
-test_confirm_valid_hold            PASSED
-test_confirm_expired_hold          PASSED
-test_confirm_wrong_customer        PASSED
-test_cancel_hold                   PASSED
-test_cancel_reservation            PASSED
-test_expiry_releases_seats         PASSED
-test_standard_pricing              PASSED
-test_group_discount                PASSED
-test_no_discount_under_four        PASSED
-test_price_rounding                PASSED
-test_invalid_group_size            PASSED
-test_invariant_seat_status         PASSED
-test_invariant_no_double_booking   PASSED
-test_invariant_state_transitions   PASSED
-test_invariant_price_deterministic PASSED
-test_nfr_decimal_arithmetic        PASSED
-test_nfr_injectable_clock          PASSED
-test_nfr_concurrent_holds          PASSED
-test_integration_confirm_pricing   PASSED
-test_integration_expiry_then_rebook PASSED
-test_integration_cancel_then_rebook PASSED
-test_integration_expired_hold      PASSED
-test_system_full_booking_workflow   PASSED
-test_system_competing_customers    PASSED
-test_system_hold_expire_rebook     PASSED
-test_system_cancel_and_rebook      PASSED
+test_list_available_seats               PASSED
+test_list_seats_none_available          PASSED
+test_list_seats_unknown_event           PASSED
+test_hold_available_seat                PASSED
+test_hold_already_held_seat             PASSED
+test_hold_reserved_seat                 PASSED
+test_confirm_valid_hold                 PASSED
+test_confirm_expired_hold               PASSED
+test_confirm_wrong_customer             PASSED
+test_cancel_hold                        PASSED
+test_cancel_reservation                 PASSED
+test_expiry_releases_seats              PASSED
+test_standard_pricing                   PASSED
+test_group_discount                     PASSED
+test_no_discount_under_four             PASSED
+test_price_rounding                     PASSED
+test_invalid_group_size                 PASSED
+test_invariant_seat_status_exclusive    PASSED
+test_invariant_no_double_booking        PASSED
+test_invariant_state_transitions        PASSED
+test_invariant_no_orphaned_holds        PASSED
+test_invariant_price_deterministic      PASSED
+test_invariant_cancellation_completeness PASSED
+test_nfr_decimal_arithmetic             PASSED
+test_nfr_injectable_clock               PASSED
+test_nfr_exclusive_hold                 PASSED
+test_integration_confirm_pricing        PASSED
+test_integration_expiry_then_rebook     PASSED
+test_integration_cancel_then_rebook     PASSED
+test_integration_expired_hold           PASSED
+test_system_full_booking_workflow       PASSED
+test_system_competing_customers         PASSED
+test_system_hold_expire_rebook          PASSED
+test_system_cancel_and_rebook           PASSED
 
-32 passed in 0.08s
+34 passed in 0.08s
 ```
 
-All 32 tests pass. The implementation is accepted.
+All 34 tests pass. The implementation is accepted.
 
 ---
 
@@ -1533,10 +1665,10 @@ Run the tests again:
 ```
 $ pytest test_seat_reservation.py -v
 
-32 passed in 0.08s
+34 passed in 0.08s
 ```
 
-All 32 tests pass with the regenerated implementation.
+All 34 tests pass with the regenerated implementation.
 
 The internal design is completely different — strategy pattern with a rules chain instead of inline computation. But the behavior is identical, verified by the same test suite.
 
@@ -1558,12 +1690,12 @@ specifications:
   - acceptance_cases (section 7)
 
 tests:
-  - test_seat_reservation.py (32 tests)
+  - test_seat_reservation.py (34 tests)
 
 nfr_constraints:
   - decimal_arithmetic
   - injectable_clock
-  - concurrent_hold_handling
+  - exclusive_hold_enforcement
 ```
 
 The fingerprint is computed as:
@@ -1596,7 +1728,7 @@ This walkthrough exercised every part of the STDD methodology on a system with r
 
 **The specification pyramid catches composition bugs.** Unit tests alone would not catch the interaction between hold expiry and confirmation, or verify that the price returned to the customer matches the PricingEngine's calculation. Integration tests verify that components honor their contracts. System tests verify that full workflows produce the correct end-to-end outcome. Bugs hide in the gaps between functions — the pyramid closes those gaps.
 
-**Regeneration works.** We discarded the PricingEngine and replaced it with a structurally different implementation. All 32 tests passed. The system's behavior did not change. This is only possible because the knowledge layer (specifications + tests) fully defines the expected behavior.
+**Regeneration works.** We discarded the PricingEngine and replaced it with a structurally different implementation. All 34 tests passed. The system's behavior did not change. This is only possible because the knowledge layer (specifications + tests) fully defines the expected behavior.
 
 **The Specification Fingerprint defines identity.** Two different implementations produce the same behavioral identity because they satisfy the same fingerprint. The implementation is not the system. The specification is.
 

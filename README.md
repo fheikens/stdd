@@ -82,6 +82,7 @@ Start with the manifesto and method. Then go deeper based on your role.
 | [Architecture](docs/architecture.md) | Designing systems for safe regeneration |
 | [NFR Framework](docs/nfr-framework.md) | Non-functional requirements as testable constraints |
 | [Engineering Playbook](docs/engineering-playbook.md) | Applying STDD in real projects |
+| [Adoption Guide](docs/adoption-guide.md) | How to adopt STDD in existing teams and projects |
 | [Versioning the Knowledge Layer](docs/versioning-the-knowledge-layer.md) | Version control for specifications and tests |
 | [Features vs Implementations](docs/features-vs-implementations.md) | Language independence in STDD |
 
@@ -114,6 +115,7 @@ stdd/
 │   ├── architecture.md
 │   ├── nfr-framework.md
 │   ├── engineering-playbook.md
+│   ├── adoption-guide.md
 │   ├── versioning-the-knowledge-layer.md
 │   └── features-vs-implementations.md
 │

@@ -3,7 +3,7 @@
 ## System Design for Specification & Test‑Driven Development
 
 Author: Frank Heikens
-Version: 1.0
+Version: 1.1
 Date: 2026
 
 ---
@@ -15,21 +15,18 @@ Date: 2026
 - [3. Deterministic Systems](#3-deterministic-systems)
 - [4. Behavior Boundaries](#4-behavior-boundaries)
 - [5. Contract‑Based Interfaces](#5-contract-based-interfaces)
-- [6. Isolated Components](#6-isolated-components)
+- [6. Dependency Injection](#6-dependency-injection)
 - [7. Managing Side Effects](#7-managing-side-effects)
-- [8. Test Isolation](#8-test-isolation)
-- [9. Regeneration Safe Zones](#9-regeneration-safe-zones)
-- [10. System Evolution](#10-system-evolution)
-- [11. Architecture Overview](#11-architecture-overview)
+- [8. Regeneration Safe Zones](#8-regeneration-safe-zones)
+- [9. Architectural Patterns for STDD](#9-architectural-patterns-for-stdd)
+- [10. Brownfield Systems](#10-brownfield-systems)
+- [11. System Evolution](#11-system-evolution)
 
 ---
 
 # 1. Introduction
 
-Specification & Test‑Driven Development (STDD) changes how software is created.
-
-Instead of treating code as the primary artifact, STDD treats **behavior as the core artifact**.  
-Specifications define the expected behavior, tests verify that behavior, and AI generates the implementation.
+Specification & Test‑Driven Development (STDD) treats **behavior as the core artifact**. Specifications define expected behavior, tests verify it, and AI generates implementations.
 
 For this model to work in real systems, the software architecture must support:
 
@@ -39,245 +36,412 @@ For this model to work in real systems, the software architecture must support:
 - isolated components
 - controlled side effects
 
-Without the right architecture, regeneration of implementations becomes unsafe or unpredictable.
+Without the right architecture, regeneration becomes unsafe or unpredictable.
 
-This document describes the architectural principles that allow STDD to work reliably in production systems.
+This document describes the architectural principles and concrete patterns that allow STDD to work reliably.
 
 ---
 
 # 2. Why Architecture Matters in STDD
 
-In traditional development, code is written manually and evolves incrementally.
+In traditional development, code evolves incrementally. Refactoring improves existing implementations.
 
-In STDD, implementations may be regenerated many times. This introduces a new requirement:
+In STDD, implementations may be discarded and regenerated. This introduces a requirement that traditional architectures do not face:
 
-> The architecture must allow implementations to be replaced without changing system behavior.
+> The architecture must allow any component's implementation to be replaced without changing system behavior.
 
-This requires:
+This means every component must have:
 
-- clear behavioral boundaries
-- strong test coverage
-- deterministic execution
-- minimal hidden dependencies
+- a clear specification of what it does
+- tests that verify its behavior
+- contracts that define how it interacts with other components
+- no hidden dependencies that a regenerated implementation might miss
 
-Architecture ensures that regenerated implementations continue to satisfy the system specification.
+If a component has implicit dependencies — global state, undocumented side effects, assumptions about call ordering — regeneration will produce an implementation that passes unit tests but breaks the system.
 
 ---
 
 # 3. Deterministic Systems
 
-STDD relies on repeatable behavior.
+STDD relies on repeatable behavior. Tests must produce the same results every time.
 
-Tests must produce the same results every time they are executed.
+Non‑deterministic behavior makes regeneration dangerous because passing tests cannot reliably prove correctness.
 
-Non‑deterministic systems make regeneration dangerous because passing tests cannot reliably prove correctness.
+## Sources of Non‑Determinism
 
-Examples of non‑deterministic behavior:
+| Source | Problem | STDD Solution |
+|--------|---------|--------------|
+| System time | Tests that depend on `now()` produce different results at different times | Injectable clock (see [Seat Reservation example](../examples/seat-reservation.md)) |
+| Random generation | UUIDs, random IDs change between runs | Injectable ID generator, or test assertions that check structure, not value |
+| External services | APIs return different data, may be unavailable | Interface abstraction with test doubles |
+| Database ordering | Unordered queries return rows in unpredictable order | Explicit ORDER BY, or sort results in tests |
+| Concurrency | Thread scheduling varies between runs | Deterministic test harness, or test at the contract level rather than timing level |
 
-- reliance on system time
-- random number generation without fixed seeds
-- external services with unpredictable responses
-- hidden global state
+The principle: where non‑determinism is unavoidable, **isolate it behind an interface** so it can be controlled in tests.
 
-Where non‑determinism is unavoidable, it must be **controlled and isolated**.
+### Example: Injectable Clock
+
+The seat reservation system uses time for hold expiry. Instead of calling `datetime.now()` directly, the `ReservationService` accepts a clock dependency:
+
+```
+ReservationService(inventory, pricing, clock)
+```
+
+In production, the clock returns real time. In tests, a `FakeClock` allows advancing time by minutes without waiting. This makes hold expiry tests deterministic and fast.
+
+This pattern applies to any non‑deterministic dependency: random generators, external service clients, file systems.
 
 ---
 
 # 4. Behavior Boundaries
 
-Systems must be divided into **behavioral components** that can be tested independently.
+Systems must be divided into **behavioral components** with clear responsibilities.
 
-Each component should represent a well‑defined responsibility.
+Each component:
 
-Example layered architecture:
+- has a defined purpose (what it does)
+- has defined inputs and outputs
+- has defined failure conditions
+- can be tested independently
+- can be regenerated independently
+
+## Layered Architecture
 
 ```
 Client / API
      ↓
-Application Services
+Application Services    ← orchestrates workflows
      ↓
-Domain Logic
+Domain Logic            ← core business rules, regeneration target
      ↓
-Data Access Layer
+Data Access Layer       ← abstracts persistence
      ↓
 Database
 ```
 
-Each layer communicates through clearly defined interfaces.
+Each layer communicates through defined interfaces. The domain logic layer is the primary regeneration target — it contains the business rules that STDD specifies and tests.
 
-This ensures that behavior can be tested and validated at each level.
+## Component Boundaries in Practice
+
+In the seat reservation system, the boundaries are:
+
+- **SeatInventory**: tracks seat status per event. Knows nothing about holds, pricing, or customers.
+- **PricingEngine**: calculates prices from section, event, and group size. Knows nothing about inventory or holds.
+- **ReservationService**: orchestrates the workflow. Depends on SeatInventory, PricingEngine, and a clock.
+
+Each component can be regenerated independently. When the PricingEngine was regenerated with a strategy pattern, only the PricingEngine tests and the integration tests needed to pass. The SeatInventory was untouched.
+
+This is only possible because the boundaries are clean. If PricingEngine had direct access to SeatInventory's internal state, regenerating one would risk breaking the other.
 
 ---
 
 # 5. Contract‑Based Interfaces
 
-Components interact through **contracts**.
+Components interact through **contracts**: defined inputs, outputs, constraints, and failure conditions.
 
-A contract defines:
-
-- input
-- output
-- constraints
-- failure conditions
-
-Example contract:
+## What a Contract Includes
 
 ```
-calculate_total(cart, tax_rate) -> total_price
+PricingEngine.calculate(section, event_id, group_size)
+
+Inputs:
+  - section: string, must exist in configuration
+  - event_id: string, must exist in configuration
+  - group_size: integer, >= 1
+
+Outputs:
+  - unit_price: Decimal, 2 decimal places
+  - total_price: Decimal, 2 decimal places
+
+Failure conditions:
+  - Unknown section → ValueError("Unknown section")
+  - group_size < 1 → ValueError("Invalid group size")
+
+Invariants:
+  - Same inputs always produce same outputs
+  - All arithmetic uses Decimal, not float
 ```
 
-The contract is validated through tests.
+## Contracts Enable Independent Regeneration
 
-Implementations may change, but the contract must remain stable.
+When `ReservationService` depends on `PricingEngine`, it depends on the contract, not the implementation. Any PricingEngine that satisfies this contract is a valid replacement.
+
+This is why integration tests are essential: they verify that the contract holds when real components interact, not just when they are tested in isolation.
+
+## Contracts Must Be Explicit
+
+Implicit contracts — assumptions about return types, ordering, or side effects that are not documented — are the leading cause of regeneration failures. If a component assumes that `list_available()` returns seats sorted by section, but the specification does not require this, a regenerated implementation may return them in a different order and break downstream code.
+
+Every assumption that crosses a component boundary must be in the specification.
 
 ---
 
-# 6. Isolated Components
+# 6. Dependency Injection
 
-Components must be independently testable.
+Dependency injection is the primary pattern that makes STDD components testable and regenerable.
 
-This means:
+## The Principle
 
-- minimal shared state
-- limited coupling
-- clear input/output boundaries
+Components receive their dependencies as constructor parameters rather than creating or locating them internally.
 
-Preferred characteristics:
+```
+# STDD-compatible: dependencies are injected
+class ReservationService:
+    def __init__(self, inventory, pricing, clock):
+        self._inventory = inventory
+        self._pricing = pricing
+        self._clock = clock
+```
 
-- stateless services
-- pure functions where possible
-- dependency injection for external services
+```
+# Not STDD-compatible: hidden dependencies
+class ReservationService:
+    def __init__(self):
+        self._inventory = SeatInventory()
+        self._pricing = PricingEngine(load_config())
+        self._clock = SystemClock()
+```
 
-This allows individual components to be regenerated without affecting the rest of the system.
+The first design allows tests to inject fakes, mocks, or alternative implementations. The second design hides dependencies and makes the component impossible to test in isolation.
+
+## What to Inject
+
+| Dependency type | Example | Why inject it |
+|----------------|---------|--------------|
+| Time | Clock, scheduler | Deterministic tests without real waiting |
+| External services | Payment gateway, email sender | Test without network calls |
+| Persistence | Database, cache | Test with in-memory store |
+| Configuration | Pricing rules, thresholds | Test different configurations |
+| ID generation | UUID generator | Predictable IDs in tests |
+
+## What Not to Inject
+
+Not everything needs injection. Internal helper functions, mathematical operations, and pure transformations that have no external dependencies can be used directly. The test for whether to inject: **does this dependency introduce non-determinism or an external coupling?** If yes, inject it.
 
 ---
 
 # 7. Managing Side Effects
 
-Most real systems interact with external systems such as:
+Most real systems interact with external systems: databases, message queues, APIs, file systems. These interactions create **side effects** that must be controlled.
 
-- databases
-- message queues
-- APIs
-- file systems
+## The Abstraction Pattern
 
-These interactions create **side effects**.
-
-Side effects must be isolated behind interfaces so they can be mocked or simulated during tests.
-
-Example abstraction:
+Side effects are isolated behind interfaces:
 
 ```
-PaymentGateway
-    process_payment()
+# Interface (the contract)
+class PaymentGateway:
+    def process_payment(self, amount, customer_id) -> PaymentResult: ...
+
+# Production implementation
+class StripeGateway(PaymentGateway):
+    def process_payment(self, amount, customer_id) -> PaymentResult:
+        # calls Stripe API
+        ...
+
+# Test implementation
+class FakeGateway(PaymentGateway):
+    def process_payment(self, amount, customer_id) -> PaymentResult:
+        return PaymentResult(success=True, transaction_id="fake-txn-001")
 ```
 
-During tests this interface can be replaced with a mock implementation.
+The domain logic depends on `PaymentGateway`, not on Stripe. Tests use `FakeGateway`. The domain logic is regenerable regardless of which payment provider is used.
+
+## Side Effects and Regeneration
+
+Side-effecting code (database writes, API calls, file operations) is generally **not a regeneration target**. These are infrastructure concerns that change infrequently and depend on specific external systems.
+
+The regeneration targets are the domain logic and application services that orchestrate business rules. By separating side effects behind interfaces, the regenerable code remains pure and testable.
 
 ---
 
-# 8. Test Isolation
+# 8. Regeneration Safe Zones
 
-Tests must run independently and produce deterministic results.
+Not all code is equally suited for regeneration. STDD architectures distinguish between regeneration targets and stable infrastructure.
 
-Requirements for test isolation:
+## Safe to Regenerate
 
-- no shared mutable state
-- predictable test data
-- isolated test environments
-- independent execution
+| Component type | Why it is safe | Example |
+|---------------|---------------|---------|
+| Business logic | Pure computation, well-specified, easily tested | PricingEngine, discount rules, validation |
+| Application services | Orchestration of domain components | ReservationService workflow |
+| Data transformations | Input → output with no side effects | Report generation, format conversion |
+| Algorithmic components | Clear specification, deterministic behavior | Search, sort, scoring |
 
-Isolated tests allow safe regeneration of implementations without risking hidden dependencies.
+## Not Safe to Regenerate
+
+| Component type | Why it is risky | Approach |
+|---------------|----------------|----------|
+| Database schema | Data migration required, cannot simply replace | Evolve incrementally, version migrations |
+| External integrations | Depend on specific API behavior, authentication | Maintain manually behind interface |
+| Security boundaries | Subtle correctness requirements, audit trails | Expert review, not blind regeneration |
+| Infrastructure config | Environment-specific, deployment-dependent | Manage through infrastructure-as-code |
+| State migration | Existing data must survive code changes | Handle separately from regeneration |
+
+## Designing for Safe Zones
+
+The architecture should place regeneration targets in the center (domain logic) and stable infrastructure at the edges (persistence, external APIs, configuration). This is sometimes called a "ports and adapters" or "hexagonal" architecture:
+
+```
+                    ┌─────────────────────┐
+  External APIs ←──→│                     │←──→ Database
+                    │    Domain Logic      │
+  Message Queue ←──→│    (regenerable)     │←──→ File System
+                    │                     │
+                    └─────────────────────┘
+                              ↑
+                     Specifications + Tests
+                     define this layer
+```
+
+The domain logic in the center depends only on interfaces. The outer adapters implement those interfaces for specific technologies. When the domain logic is regenerated, the adapters remain unchanged.
 
 ---
 
-# 9. Regeneration Safe Zones
+# 9. Architectural Patterns for STDD
 
-In STDD architectures, certain parts of the system can be regenerated safely.
+Different system architectures have different implications for STDD.
 
-Examples:
+## Monolith with Clean Boundaries
 
-- business logic
-- data transformations
-- validation logic
-- algorithmic components
+The simplest architecture for STDD: a single deployment unit with well-separated internal components.
 
-Other parts of the system should remain stable.
+**Strengths for STDD:**
+- Component boundaries are enforced by module structure
+- Integration tests run in-process (fast and deterministic)
+- Regeneration affects only the changed module
 
-Examples:
+**Risks:**
+- Without discipline, modules develop hidden coupling
+- Shared state across modules breaks independent regeneration
 
-- database schema
-- external integrations
-- security boundaries
-- infrastructure configuration
+**Guidance:** Use dependency injection consistently. Each module exposes a contract interface. Internal implementation details are private. Integration tests verify contracts between modules.
 
-Separating these areas ensures that regeneration does not introduce instability.
+## Microservices
+
+Each service is an independently deployable component with its own specification.
+
+**Strengths for STDD:**
+- Service boundaries enforce component isolation
+- Each service can be regenerated and deployed independently
+- API contracts are explicit (HTTP, gRPC, message schemas)
+
+**Risks:**
+- Integration testing is harder (network calls, service availability)
+- Contract changes require coordination across services
+- End-to-end system tests are slower and less deterministic
+
+**Guidance:** Use contract testing at service boundaries. Each service has its own specification pyramid. System-level tests run against a test environment with all services deployed. Version API contracts explicitly.
+
+## Event-Driven Systems
+
+Components communicate through events (messages, queues, streams).
+
+**Strengths for STDD:**
+- Natural decoupling — producers and consumers have independent specifications
+- Events are the contract — the event schema defines the interface
+- Consumers can be regenerated without changing producers
+
+**Risks:**
+- Event ordering and delivery guarantees add specification complexity
+- Testing event flows end-to-end requires infrastructure (test brokers, in-memory queues)
+- Eventual consistency makes system-level assertions harder
+
+**Guidance:** Specify event schemas as contracts. Test producers and consumers independently against the schema. Use in-memory event brokers in tests for determinism. System tests must account for eventual consistency.
 
 ---
 
-# 10. System Evolution
+# 10. Brownfield Systems
 
-Systems evolve as requirements change.
+Most software teams are not starting from scratch. They have existing systems with existing code, limited test coverage, and implicit specifications embedded in the implementation.
 
-In STDD, evolution follows a controlled process:
+STDD can be applied incrementally to existing systems.
+
+## The Strangler Pattern
+
+Do not attempt to rewrite an entire system at once. Instead, apply STDD to new features and gradually migrate existing features.
+
+1. **New features** follow full STDD: specification → tests → AI-generated implementation.
+2. **Modified features** get specifications and tests written for the existing behavior before any changes are made. The existing code serves as a reference implementation. Once the tests pass against the existing code, the specification is complete enough to support regeneration.
+3. **Stable features** that are not being modified can be left as-is. They do not need STDD specifications until they need to change.
+
+## Writing Specifications for Existing Code
+
+When adding STDD to existing code, the specification is extracted from the implementation:
+
+1. **Read the code** and document what it does — inputs, outputs, constraints, failure conditions.
+2. **Write tests** that capture the current behavior, including edge cases.
+3. **Run the tests** against the existing code. They must all pass.
+4. **Review the specification** for completeness. Does it cover all paths? All failure modes?
+
+At this point, the existing code can be regenerated: discard it, give the AI the specification and tests, and verify the new implementation passes.
+
+This is a useful exercise even if you do not intend to regenerate immediately. It produces documentation (the specification) and safety nets (the tests) that the system previously lacked.
+
+## Common Challenges
+
+**Tightly coupled components.** If existing code has tight coupling, extracting one component's specification is difficult because its behavior depends on the internal state of another. The first step is introducing interfaces between components, even if the implementations remain unchanged.
+
+**Global state.** Existing systems often rely on global state (singletons, module-level variables, shared databases). This must be refactored to use dependency injection before the component becomes a regeneration target.
+
+**Undocumented behavior.** The hardest part of brownfield STDD is discovering behavior that is not obvious from the code. Bug-for-bug compatibility may be necessary if other systems depend on specific behavior, even if that behavior was originally unintended.
+
+---
+
+# 11. System Evolution
+
+Systems evolve as requirements change. In STDD, evolution follows a controlled process:
 
 1. Update the specification
 2. Add or update tests
 3. Regenerate the implementation
-4. Verify that all tests pass
+4. Verify that all tests pass (unit, integration, and system levels)
 
-Architecture must support this process by ensuring that regenerated components remain isolated and predictable.
+## Adding a Feature
 
----
+1. Write the feature specification
+2. Write behavioral scenarios and acceptance cases
+3. Write tests at all relevant pyramid levels
+4. Generate the implementation
+5. Verify no existing tests break
 
-# 11. Architecture Overview
+## Changing a Feature
 
-The following diagram illustrates how STDD fits into system architecture.
+1. Update the specification to reflect the new behavior
+2. Update tests that verify the changed behavior
+3. Regenerate the affected components
+4. Verify all tests pass — including integration and system tests that exercise the changed component
 
-```mermaid
-flowchart TD
+## Removing a Feature
 
-A[Specification]
-B[Behavior Definition]
-C[Test Suite]
-D[AI Generated Implementation]
-E[System Components]
-F[External Systems]
+1. Remove the specification
+2. Remove the tests
+3. Regenerate affected components (or remove dead code manually)
+4. Verify remaining tests still pass
 
-A --> B
-B --> C
-C --> D
-D --> E
-E --> F
-```
-
-Specifications and tests define system behavior.
-
-AI generates implementations that satisfy the tests.
-
-Architecture ensures that components remain testable and replaceable.
+In all cases, the Specification Fingerprint changes to reflect the evolution. The CI pipeline detects this and requires both specification and test updates in the same change.
 
 ---
 
 # Conclusion
 
-STDD requires systems to be designed differently from traditional architectures.
+STDD requires systems to be designed for **safe regeneration**.
 
-The goal is not only maintainability, but **safe regeneration of implementations**.
+The key architectural principles:
 
-By enforcing:
+- **Determinism**: control non-deterministic dependencies through injection
+- **Boundaries**: separate components with clear responsibilities
+- **Contracts**: define explicit interfaces between components
+- **Injection**: provide dependencies as parameters, not hidden internals
+- **Side effect isolation**: keep domain logic pure, push I/O to the edges
+- **Safe zones**: regenerate domain logic, maintain infrastructure manually
 
-- deterministic execution
-- contract‑based interfaces
-- isolated components
-- controlled side effects
-
-STDD architectures allow AI‑generated implementations to evolve while preserving system behavior.
-
-Specifications and tests remain the ultimate source of truth.
+When these principles are followed, implementations become genuinely disposable. The specifications and tests define the system. The architecture makes that possible.
 
 ---
 
 For guidance on writing the specifications that drive these architectures, see [Writing Specifications](writing-specifications.md).
 
 For non‑functional quality constraints that architectures must enforce, see [NFR Framework](nfr-framework.md).
+
+For a worked example showing these patterns in practice, see [Seat Reservation API](../examples/seat-reservation.md).

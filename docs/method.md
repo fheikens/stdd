@@ -20,8 +20,9 @@ Date: 2026
 - [8. Code Generation Cycle](#8-code-generation-cycle)
 - [9. Regeneration Loop](#9-regeneration-loop)
 - [10. The Specification Pyramid](#10-the-specification-pyramid)
-- [11. Maintaining System Stability](#11-maintaining-system-stability)
-- [12. Example STDD Workflow](#12-example-stdd-workflow)
+- [11. When Regeneration Fails](#11-when-regeneration-fails)
+- [12. Maintaining System Stability](#12-maintaining-system-stability)
+- [13. Example STDD Workflow](#13-example-stdd-workflow)
 
 ---
 
@@ -373,7 +374,47 @@ For a worked example showing all four levels in practice, see [Seat Reservation 
 
 ---
 
-# 11. Maintaining System Stability
+# 11. When Regeneration Fails
+
+STDD's regeneration model depends on AI reliably producing correct implementations from specifications and tests. This usually works for well-decomposed functions under approximately 50 lines. But it is not guaranteed, and practitioners should understand where the model has limits.
+
+## Diagnosis, Not Blame
+
+When AI generates code that fails tests, the first step is diagnosis — not retrying blindly.
+
+**Read the test failure.** The failing test tells you which specification the AI violated. This is the most important signal. A test that expected a `Decimal("150.00")` but received `150.0` tells you the AI used float arithmetic instead of decimal. A test that expected `"Hold has expired"` but received `"Hold not found"` tells you the expiry logic is in the wrong place.
+
+**Check the specification.** If the AI consistently misunderstands a requirement, the specification may be ambiguous. A specification that says "the price includes a discount" is weaker than one that says "group discount of 10% applies for groups of 4 or more, calculated as unit_price × (1 - 0.10), rounded to 2 decimal places." The more precise the specification, the more likely AI generates correct code on the first attempt.
+
+**Check the decomposition.** If a function is too large or has too many responsibilities, AI is more likely to get part of it wrong. Break it into smaller functions, each with its own specification and tests. A 50-line function with 5 tests is trivially regenerable. A 200-line function with 15 interacting concerns is not.
+
+## Common Failure Patterns
+
+**Arithmetic precision.** AI frequently defaults to floating-point arithmetic even when the specification requires decimal. Tests that compare exact decimal values catch this immediately. The fix is to make the constraint explicit in the prompt: "Use Decimal arithmetic, not float."
+
+**Edge case omission.** AI may generate code that handles the main path correctly but misses edge cases. This is why STDD requires specifications to enumerate failure conditions explicitly. Every failure condition should have a test. If the AI misses one, the test catches it.
+
+**State management errors.** When multiple operations modify shared state, AI may generate code that handles each operation correctly in isolation but fails when operations are interleaved. This is why the specification pyramid includes integration and system tests. Unit tests alone will not catch state interaction bugs.
+
+**Contract mismatches between components.** When regenerating one component, the new implementation may subtly violate the contract expected by another component. Integration tests catch this. If they do not, the integration specification needs strengthening.
+
+## What Not to Do
+
+**Never weaken a test to make AI-generated code pass.** The test represents the specification. If the AI cannot satisfy it, the prompt needs work — not the test. Weakening a test to accommodate a flawed implementation is the most dangerous anti-pattern in STDD.
+
+**Never retry without changing the prompt.** If AI generates incorrect code, running the same prompt again usually produces the same mistake. Change the prompt: add more context, highlight the constraint that was missed, provide an example of the expected output, or break the task into smaller pieces.
+
+**Never skip integration and system tests after regeneration.** A regenerated unit may pass all its unit tests while breaking a workflow that depends on it. Always run the full test pyramid after regeneration.
+
+## Limits of the Model
+
+STDD does not claim that AI can generate arbitrarily complex systems from specifications alone. The model works because it forces decomposition into small, well-specified units that are within AI's reliable generation capability.
+
+Systems that resist decomposition — tightly coupled legacy code, deeply stateful algorithms, or code that depends on undocumented external behavior — are harder to apply STDD to. The adoption path for these systems starts with writing specifications and tests for the existing behavior before attempting regeneration. See [Architecture](architecture.md) for guidance on designing systems that support safe regeneration.
+
+---
+
+# 12. Maintaining System Stability
 
 System stability in STDD is guaranteed by three elements.
 
@@ -399,7 +440,7 @@ This ensures system behavior evolves in a controlled and verifiable way.
 
 ---
 
-# 12. Example STDD Workflow
+# 13. Example STDD Workflow
 
 A simple STDD development cycle:
 
