@@ -21,7 +21,8 @@ Date: 2026
 - [9. Treating Generated Code as Untouchable](#9-treating-generated-code-as-untouchable)
 - [10. Mixing Architecture and Behavior](#10-mixing-architecture-and-behavior)
 - [11. Ignoring Regeneration](#11-ignoring-regeneration)
-- [12. Conclusion](#12-conclusion)
+- [12. Untraceable Specification‑to‑Test Mapping](#12-untraceable-specificationtotest-mapping)
+- [13. Conclusion](#13-conclusion)
 
 ---
 
@@ -247,7 +248,28 @@ This ensures the behavior remains the source of truth.
 
 ---
 
-# 12. Conclusion
+# 12. Untraceable Specification-to-Test Mapping
+
+A specification can be precise and complete. The test suite can pass. And the system can still be wrong.
+
+This happens when the tests do not faithfully represent the specification. An invariant may be stated in the specification but never verified by any test. A failure condition may be described but the test suite only covers the happy path.
+
+This is the **specification-to-test gap**.
+
+It is one of the most dangerous anti-patterns because it is invisible. The specification looks complete. The tests look green. But the regeneration loop is not safe because the tests do not cover the full behavioral intent.
+
+To avoid this:
+
+- Maintain a traceability matrix that maps every scenario, invariant, and failure condition to at least one test.
+- Generate tests from structured acceptance cases rather than translating manually.
+- Use property-based tests to verify invariants across many inputs.
+- Review the specification and test suite together, not separately.
+
+For detailed strategies on closing this gap, see **Writing Specifications in STDD**, Section 13.
+
+---
+
+# 13. Conclusion
 
 STDD works best when its principles are followed consistently.
 

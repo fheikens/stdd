@@ -22,8 +22,9 @@ Date: 2026
 - [10. From Vague to Precise](#10-from-vague-to-precise)
 - [11. Specification Templates](#11-specification-templates)
 - [12. Specification Review Checklist](#12-specification-review-checklist)
-- [13. Common Specification Mistakes](#13-common-specification-mistakes)
-- [14. Conclusion](#14-conclusion)
+- [13. Closing the Specification‑to‑Test Gap](#13-closing-the-specificationtotest-gap)
+- [14. Common Specification Mistakes](#14-common-specification-mistakes)
+- [15. Conclusion](#15-conclusion)
 
 ---
 
@@ -790,7 +791,126 @@ Before a specification moves from `draft` to `accepted`, it should pass this che
 
 ---
 
-# 13. Common Specification Mistakes
+# 13. Closing the Specification-to-Test Gap
+
+A specification can be precise. Tests can pass. And the system can still be wrong.
+
+This happens when the tests do not faithfully represent the specification. The translation from specification to test suite is where bugs hide.
+
+This is the **specification-to-test gap**: the risk that the test suite does not fully cover the behavioral intent expressed in the specification.
+
+## Why the Gap Exists
+
+Specifications describe behavior in natural language and structured scenarios. Tests express behavior in executable code. The translation between these two representations is manual and error-prone.
+
+Common failure modes:
+
+- A scenario is defined in the specification but no corresponding test exists.
+- An invariant is stated but never verified by any test.
+- A failure condition is described but the test suite only covers the happy path.
+- An edge case is documented but the test uses a value that does not actually exercise the boundary.
+
+## Strategy 1: Traceability Matrix
+
+Every scenario, invariant, and failure condition in the specification should map to at least one test.
+
+A traceability matrix makes this mapping explicit.
+
+Example:
+
+| Specification Element | Type | Test |
+|---|---|---|
+| Reserve available seat | Scenario | test_available_seat_can_be_held |
+| Reserve already reserved seat | Scenario | test_active_hold_blocks_new_hold |
+| Reserve seat with expired hold | Scenario | test_expired_hold_allows_new_hold |
+| Reserve sold seat | Scenario | test_sold_seat_cannot_be_held |
+| Seat in exactly one state | Invariant | test_seat_state_is_always_singular |
+| Sold seat cannot transition | Invariant | test_sold_seat_is_final |
+| No more than one active hold | Invariant | test_single_active_hold_per_seat |
+| Seat does not exist | Failure | test_nonexistent_seat_returns_error |
+
+If a specification element has no corresponding test, the gap is visible immediately.
+
+The traceability matrix can be maintained as a simple table in the specification directory or generated automatically from test annotations.
+
+## Strategy 2: Acceptance Cases as the Bridge
+
+Acceptance cases (Section 8) serve as a mechanical bridge between the specification and the test suite.
+
+Because acceptance cases are structured data with explicit inputs and expected outputs, they can be used to **generate** test cases rather than relying on manual translation.
+
+A test generator reads the acceptance cases and produces executable tests:
+
+```python
+# Generated from acceptance_cases.yaml
+@pytest.mark.parametrize("case", load_acceptance_cases("seat_reservation"))
+def test_acceptance(case):
+    result = reserve_seat(case["given"], case["when"])
+    assert_matches(result, case["then"])
+```
+
+When tests are generated from acceptance cases, the specification-to-test gap narrows to the gap between behavioral scenarios and acceptance cases. This is a smaller, more reviewable translation.
+
+## Strategy 3: Coverage Audit
+
+After the test suite is written, audit it against the specification using the review checklist (Section 12).
+
+For each specification element, ask:
+
+- Does at least one test exercise this scenario?
+- Does at least one test verify this invariant?
+- Does at least one test trigger this failure condition?
+- Are the test inputs and expected outputs consistent with the acceptance cases?
+
+If the answer to any of these is no, the gap must be closed before the specification moves to `accepted` status.
+
+## Strategy 4: Invariant Tests as Safety Nets
+
+Scenario tests verify specific input-output pairs. They can miss behaviors that only appear under unusual combinations.
+
+Invariant tests take a different approach. Instead of checking a single scenario, they verify that a rule holds across many inputs.
+
+Example:
+
+```python
+from hypothesis import given, strategies as st
+
+@given(
+    items=st.lists(st.decimals(min_value=0, max_value=10000), max_size=500),
+    tax_rate=st.decimals(min_value=0, max_value=1)
+)
+def test_total_is_never_negative(items, tax_rate):
+    result = calculate_total(items, tax_rate)
+    assert result >= 0
+```
+
+This test does not check a specific input. It checks that the invariant "total must never be negative" holds across thousands of random inputs.
+
+Property-based tests like this are particularly effective at catching edge cases that manual scenario tests miss.
+
+## Strategy 5: Specification Review Includes Test Review
+
+When a specification is reviewed (Section 12), the test suite should be reviewed at the same time.
+
+Reviewers check not only whether the specification is complete, but whether the tests faithfully represent it.
+
+The review question is:
+
+> If I gave this specification and these tests to a new AI with no knowledge of the current implementation, would the tests be sufficient to verify any correct implementation and reject any incorrect one?
+
+If the answer is no, either the specification has gaps or the tests have gaps.
+
+## The Gap Cannot Be Fully Eliminated
+
+The specification-to-test gap can be narrowed but not eliminated entirely.
+
+Natural language specifications will always contain nuance that executable tests cannot fully capture. The goal is not perfection. The goal is to make the gap as small and as visible as possible.
+
+The combination of traceability matrices, generated tests from acceptance cases, invariant tests, and paired specification-test reviews makes the gap manageable.
+
+---
+
+# 14. Common Specification Mistakes
 
 ## Describing Implementation Instead of Behavior
 
@@ -864,7 +984,7 @@ Scenarios describe behavior visible from outside the system. Internal operations
 
 ---
 
-# 14. Conclusion
+# 15. Conclusion
 
 Specifications are the foundation of STDD.
 

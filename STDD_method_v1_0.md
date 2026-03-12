@@ -227,6 +227,8 @@ This test defines the expected behavior.
 
 Any implementation must satisfy this test.
 
+The translation from specification to tests is a critical step. Every scenario, invariant, and failure condition in the specification must be covered by at least one test. A traceability matrix, generated tests from acceptance cases, and property-based invariant tests help close this gap. For detailed strategies, see **Writing Specifications in STDD**, Section 13.
+
 ---
 
 # 7. Role of AI
