@@ -3,7 +3,7 @@
 ## Applying Specification & Test-Driven Development in Real Projects
 
 Author: Frank Heikens
-Version: 1.1
+Version: 1.2
 Date: 2026
 
 ---
@@ -20,7 +20,9 @@ Date: 2026
 - [5. Continuous Specification Integrity (CSI)](#5-continuous-specification-integrity-csi)
   - [Fingerprint Operations](#fingerprint-operations)
 - [6. Team Roles in STDD](#6-team-roles-in-stdd)
-- [7. Conclusion](#7-conclusion)
+- [7. Failure Mode Catalog](#7-failure-mode-catalog)
+- [8. Pre-Flight Checklists](#8-pre-flight-checklists)
+- [9. Conclusion](#9-conclusion)
 
 ---
 
@@ -736,6 +738,78 @@ STDD changes how teams collaborate.
 
 ---
 
-# 7. Conclusion
+# 7. Failure Mode Catalog
 
-This playbook covers the practical aspects of applying STDD: repository structure, test-first prompting, decomposition, CSI pipelines, and team roles. For the underlying principles, see the [Method](method.md). For a complete worked example, see the [Seat Reservation API](../examples/seat-reservation.md).
+STDD is a disciplined process, but things still go wrong. This catalog documents the most common failure modes, their symptoms, and the recovery procedures. Treat this as a diagnostic reference when something breaks.
+
+### 7.1 AI generates code that passes tests but violates an unspecified invariant
+
+- **Symptom**: Code works in tests but fails in production or integration.
+- **Cause**: Missing invariant in specification.
+- **Recovery**: Add the invariant, add a test for it, regenerate.
+
+### 7.2 Specification is ambiguous — AI picks one interpretation, team expected another
+
+- **Symptom**: Tests pass but the behavior is not what was intended.
+- **Cause**: Specification language allows multiple valid interpretations.
+- **Recovery**: Rewrite the ambiguous clause with concrete examples, add boundary tests.
+
+### 7.3 Component too large for reliable generation
+
+- **Symptom**: AI generates code with subtle bugs, requires many attempts, or produces inconsistent results.
+- **Cause**: Component has too many responsibilities or exceeds ~50 lines.
+- **Recovery**: Decompose into smaller functions, each with own spec and tests.
+
+### 7.4 Tests pass but integration breaks
+
+- **Symptom**: Unit tests pass after regeneration, but integration or system tests fail.
+- **Cause**: The regenerated component satisfies its own contract but violates assumptions of dependent components.
+- **Recovery**: Add integration tests that exercise the collaboration, verify contracts between components.
+
+### 7.5 Specification drift — spec and implementation diverge over time
+
+- **Symptom**: Fingerprint check fails, or regeneration produces different behavior than the running system.
+- **Cause**: Implementation was modified without updating the specification.
+- **Recovery**: Treat the fingerprint failure as a blocking CI gate, update spec to match intended behavior, regenerate.
+
+### 7.6 Over-specification — spec is so detailed it constrains implementation unnecessarily
+
+- **Symptom**: AI can only generate one possible implementation, or trivial refactoring breaks tests.
+- **Cause**: Specification describes HOW instead of WHAT.
+- **Recovery**: Rewrite specification to focus on inputs, outputs, and invariants — not on internal steps or data structures.
+
+---
+
+# 8. Pre-Flight Checklists
+
+These checklists codify the verification steps that teams perform at three critical moments in the STDD workflow. Use them as gate checks — do not proceed until every item is satisfied.
+
+### Before Generation
+
+- [ ] Specification has inputs, outputs, invariants, and failure conditions
+- [ ] Every behavioral scenario has a corresponding test
+- [ ] Traceability matrix is complete (no untested spec IDs)
+- [ ] NFR constraints are included in the prompt (decimal precision, line limits, error handling)
+- [ ] Component fits within ~50 lines; if not, decompose first
+
+### Before Review
+
+- [ ] All tests pass (unit, integration, system)
+- [ ] Specification fingerprint is current
+- [ ] Generated code is readable (no obfuscated AI output)
+- [ ] No behavior exists in the implementation that is not in the specification
+- [ ] Traceability matrix matches between spec IDs and test names
+
+### Before Merge
+
+- [ ] PR includes specification, tests, and implementation together
+- [ ] CI pipeline passes all three gates (traceability, tests, fingerprint)
+- [ ] Specification changes have been reviewed for precision and completeness
+- [ ] No orphaned tests (tests without spec IDs) or untested specs
+- [ ] Regeneration has been validated: discard implementation, regenerate, tests still pass
+
+---
+
+# 9. Conclusion
+
+This playbook covers the practical aspects of applying STDD: repository structure, test-first prompting, decomposition, CSI pipelines, team roles, failure mode recovery, and pre-flight checklists. For the underlying principles, see the [Method](method.md). For a complete worked example, see the [Seat Reservation API](../examples/seat-reservation.md).
