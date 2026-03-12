@@ -9,16 +9,16 @@ Date: 2026
 
 ## Table of Contents
 
-1. Introduction
-2. The Core Principle
-3. What Is a Feature?
-4. What Is an Implementation?
-5. Why Language Independence Matters
-6. Canonical Behavior Tests
-7. Language-Specific Executable Tests
-8. Recommended Repository Structure
-9. Regeneration Across Languages
-10. Conclusion
+- [1. Introduction](#1-introduction)
+- [2. The Core Principle](#2-the-core-principle)
+- [3. What Is a Feature?](#3-what-is-a-feature)
+- [4. What Is an Implementation?](#4-what-is-an-implementation)
+- [5. Why Language Independence Matters](#5-why-language-independence-matters)
+- [6. Canonical Behavior Tests](#6-canonical-behavior-tests)
+- [7. Language-Specific Executable Tests](#7-language-specific-executable-tests)
+- [8. Recommended Repository Structure](#8-recommended-repository-structure)
+- [9. Regeneration Across Languages](#9-regeneration-across-languages)
+- [10. Conclusion](#10-conclusion)
 
 ---
 

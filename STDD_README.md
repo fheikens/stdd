@@ -94,12 +94,16 @@ AI generates implementations that satisfy those tests.
 
 - **Manifesto** – Philosophy behind STDD
 - **Method** – How STDD works in practice
+- **Writing Specifications** – How to write precise, testable specifications
 - **Architecture** – Designing systems for safe regeneration
 - **Examples** – Practical STDD development examples
 - **Anti-Patterns** – Common mistakes to avoid
 - **STDD vs Existing Methods** – Comparison with other approaches
 - **Why AI Coding Needs STDD** – Stability in AI-generated systems
+- **NFR Framework** – Non-functional requirements as testable constraints
 - **Engineering Playbook** – Applying STDD in real projects
+- **Features vs Implementations** – Language independence in STDD
+- **Versioning the Knowledge Layer** – Version control for specifications and tests
 
 ---
 
@@ -112,12 +116,16 @@ stdd
 │
 ├─ README.md
 ├─ STDD_method_v1_0.md
+├─ STDD_writing_specifications_v1_0.md
 ├─ STDD_architecture_v1_0.md
 ├─ STDD_examples_v1_0.md
 ├─ STDD_antipatterns_v1_0.md
 ├─ STDD_vs_existing_methods_v1_0.md
 ├─ STDD_why_ai_needs_stdd_v1_0.md
+├─ STDD_nfr_framework_v1_0.md
 ├─ STDD_engineering_playbook_v1_0.md
+├─ STDD_features_vs_implementations_v1_0.md
+├─ STDD_versioning_the_knowledge_layer_v1_0.md
 │
 └─ diagrams
     ├─ stdd_development_loop.md

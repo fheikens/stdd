@@ -275,3 +275,9 @@ By enforcing:
 STDD architectures allow AI‑generated implementations to evolve while preserving system behavior.
 
 Specifications and tests remain the ultimate source of truth.
+
+---
+
+For guidance on writing the specifications that drive these architectures, see **Writing Specifications in STDD**.
+
+For non‑functional quality constraints that architectures must enforce, see **STDD Non‑Functional Requirements Framework**.

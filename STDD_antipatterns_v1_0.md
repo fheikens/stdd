@@ -91,6 +91,8 @@ Ambiguity leads to unstable implementations and failing tests.
 
 STDD requires **explicit behavior definitions**.
 
+For detailed guidance on eliminating ambiguity, see **Writing Specifications in STDD**.
+
 ---
 
 # 4. Tests That Do Not Verify Behavior

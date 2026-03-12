@@ -38,6 +38,8 @@ The examples are intentionally simple.
 
 The goal is not to show advanced software engineering, but to show how STDD turns behavior into the stable center of development.
 
+Each example includes a structured specification following the format described in **Writing Specifications in STDD**.
+
 ---
 
 # 2. Why Examples Matter
@@ -60,9 +62,27 @@ The starting point is always the expected behavior of the system.
 
 ## Specification
 
-The system must calculate the total price of a shopping cart including tax.
+```
+Feature: Shopping Cart Total
+Version: 1.0
+Status: accepted
 
-The tax rate must be configurable.
+Description:
+  The system must calculate the total price of items
+  in a shopping cart including tax.
+  The tax rate must be configurable per request.
+
+Inputs:
+  - items: list of numeric prices
+  - tax_rate: decimal between 0 and 1
+
+Outputs:
+  - total: decimal
+
+Invariants:
+  - The total must never be negative.
+  - The total must equal subtotal + (subtotal * tax_rate).
+```
 
 ## Expected Behavior
 
@@ -105,11 +125,30 @@ If the code is regenerated later, the same tests still define the required behav
 
 ## Specification
 
-The system must validate a username and password combination.
+```
+Feature: User Login Validation
+Version: 1.0
+Status: accepted
 
-If the credentials are valid, access is granted.
+Description:
+  The system must validate a username and password combination.
+  If the credentials are valid, access is granted.
+  If either value is invalid, access is denied.
 
-If either value is invalid, access is denied.
+Inputs:
+  - username: string
+  - password: string
+
+Outputs:
+  - result: boolean (True if access granted, False if denied)
+
+Invariants:
+  - The system must not reveal whether the username
+    or the password was incorrect.
+
+Failure Conditions:
+  - Empty username or password: rejected, returns False.
+```
 
 ## Expected Behavior
 
@@ -155,11 +194,32 @@ As long as the tests remain valid, the behavior stays stable.
 
 ## Specification
 
-The system must place a temporary hold on a seat for a fixed number of minutes.
+```
+Feature: Seat Reservation Hold
+Version: 1.0
+Status: accepted
 
-A seat that is already held or sold cannot be held again.
+Description:
+  The system must place a temporary hold on a seat
+  for a fixed number of minutes. A seat that is already
+  held or sold cannot be held again. An expired hold
+  must no longer block a new hold.
 
-An expired hold must no longer block a new hold.
+Inputs:
+  - seat: {status, hold_until}
+  - current_time: datetime
+
+Outputs:
+  - result: boolean (True if seat can be held)
+
+Invariants:
+  - A seat can be in exactly one state: available, held, or sold.
+  - A sold seat cannot transition to any other state.
+  - No more than one active hold may exist for a single seat.
+
+Failure Conditions:
+  - Seat does not exist: rejected with error.
+```
 
 ## Expected Behavior
 
@@ -232,17 +292,36 @@ The behavior is still defined before the implementation exists.
 
 ## Specification
 
-The system must classify a transaction score into one of three categories:
+```
+Feature: Fraud Score Classification
+Version: 1.0
+Status: accepted
 
-- `low`
-- `medium`
-- `high`
+Description:
+  The system must classify a transaction score
+  into one of three risk categories.
 
-The rules are:
+Inputs:
+  - score: integer (0-100)
 
-- score below `30` → `low`
-- score from `30` up to but not including `70` → `medium`
-- score `70` or higher → `high`
+Outputs:
+  - classification: string (low, medium, or high)
+
+Rules:
+  - score below 30: low
+  - score from 30 up to but not including 70: medium
+  - score 70 or higher: high
+
+Invariants:
+  - Every valid score must produce exactly one classification.
+  - The classification must be one of: low, medium, high.
+
+Constraints:
+  - Score must be between 0 and 100 inclusive.
+
+Failure Conditions:
+  - Score outside 0-100 range: rejected with validation error.
+```
 
 ## Expected Behavior
 

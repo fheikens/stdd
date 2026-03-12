@@ -10,17 +10,17 @@ Date: 2026
 
 ## Table of Contents
 
-1. Introduction
-2. STDD in a Real Development Workflow
-3. Typical Repository Structure
-4. Writing Specifications
-5. Writing Behavioral Tests
-6. Using AI to Generate Implementations
-7. Continuous Integration with STDD
-8. Regeneration in Practice
-9. Team Roles in STDD
-10. Example Development Cycle
-11. Conclusion
+- [1. Introduction](#1-introduction)
+- [2. STDD in a Real Development Workflow](#2-stdd-in-a-real-development-workflow)
+- [3. Typical Repository Structure](#3-typical-repository-structure)
+- [4. Writing Specifications](#4-writing-specifications)
+- [5. Writing Behavioral Tests](#5-writing-behavioral-tests)
+- [6. Using AI to Generate Implementations](#6-using-ai-to-generate-implementations)
+- [7. Continuous Integration with STDD](#7-continuous-integration-with-stdd)
+- [8. Regeneration in Practice](#8-regeneration-in-practice)
+- [9. Team Roles in STDD](#9-team-roles-in-stdd)
+- [10. Example Development Cycle](#10-example-development-cycle)
+- [11. Conclusion](#11-conclusion)
 
 ---
 
@@ -114,19 +114,67 @@ They must be:
 - precise
 - unambiguous
 - testable
+- independent of implementation details
+
+A specification answers six questions:
+
+1. What does the system do?
+2. What are the inputs and outputs?
+3. What are the behavioral scenarios?
+4. What are the invariants?
+5. What are the failure conditions?
+6. What are the constraints?
 
 Example specification:
 
-The system must calculate the total price of a shopping cart including tax.
+```
+Feature: Shopping Cart Total
+Version: 1.0
+Status: accepted
 
-The tax rate must be configurable.
+## Description
 
-Edge cases:
+The system must calculate the total price of items in a shopping cart including tax.
+The tax rate must be configurable per request.
 
-- empty cart returns zero
-- zero tax rate returns subtotal
+## Inputs
 
-Specifications should avoid describing implementation details.
+- items: list of numeric prices
+- tax_rate: decimal between 0 and 1
+
+## Outputs
+
+- total: decimal
+
+## Behavioral Scenarios
+
+Scenario: Normal cart with tax
+  Given: Items [10, 20] and tax rate 0.10
+  When: Total is calculated
+  Then: Result is 33
+
+Scenario: Empty cart
+  Given: Items [] and tax rate 0.10
+  When: Total is calculated
+  Then: Result is 0
+
+Scenario: Zero tax rate
+  Given: Items [10, 20] and tax rate 0.0
+  When: Total is calculated
+  Then: Result is 30
+
+## Invariants
+
+- The total must never be negative.
+- The total must equal subtotal + (subtotal * tax_rate).
+
+## Failure Conditions
+
+- Negative prices: rejected with validation error.
+- Tax rate outside 0-1 range: rejected with validation error.
+```
+
+For comprehensive guidance on writing specifications, see **Writing Specifications in STDD**.
 
 ---
 

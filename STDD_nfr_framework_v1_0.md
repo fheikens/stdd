@@ -558,3 +558,7 @@ By treating non‑functional requirements as first‑class testable artifacts, S
 **Behavior defines what the system does.
 NFRs define how well it does it.
 Tests verify both.**
+
+---
+
+For guidance on writing the specifications that declare technology and domain context, see **Writing Specifications in STDD**.

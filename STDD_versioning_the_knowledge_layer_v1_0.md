@@ -122,3 +122,9 @@ By storing the knowledge layer in Git, organizations gain:
 - stable system behavior over time
 
 **The knowledge layer becomes the permanent record of system intent.**
+
+---
+
+For guidance on writing the specifications that form the knowledge layer, see **Writing Specifications in STDD**.
+
+For non‑functional quality constraints that must be versioned alongside specifications, see **STDD Non‑Functional Requirements Framework**.

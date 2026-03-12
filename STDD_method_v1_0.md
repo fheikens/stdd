@@ -181,6 +181,8 @@ Specifications define:
 
 The specification defines **what must happen**, not **how it should be implemented**.
 
+A complete specification includes behavioral scenarios, invariants, failure conditions, and structured acceptance cases. For detailed guidance on writing specifications, see **Writing Specifications in STDD**.
+
 ---
 
 # 6. Role of Tests
