@@ -54,6 +54,64 @@ python yaml_to_pytests.py acceptance-cases.yaml --language go --output order_tes
 - `--function` — generates call stubs with arguments from the YAML inputs
 - `--language` — `python` (default) or `go` (table-driven test skeleton)
 
+### How argument mapping works
+
+When `--function` is specified, the `given` and `when` keys from each acceptance case are **merged** into a single keyword-argument call. For example, given this YAML:
+
+```yaml
+given:
+  order_id: "ORD-100"
+  order_status: "pending"
+when:
+  action: cancel_order
+  reason: "Changed my mind"
+```
+
+Running with `--function cancel_order` produces:
+
+```python
+result = cancel_order(order_id='ORD-100', order_status='pending',
+                      action='cancel_order', reason='Changed my mind')
+```
+
+All `given` keys appear first, followed by `when` keys — in the order they appear in the YAML. The `then` keys become assertion lines (`assert result.KEY == VALUE`).
+
+### Go end-to-end example
+
+Generate a Go table-driven test skeleton from the same YAML used by Python:
+
+```bash
+python yaml_to_pytests.py examples/order-cancellation/acceptance-cases.yaml \
+    --language go \
+    --output order_cancel_test.go
+```
+
+This produces a single `TestAcceptanceCases` function with one sub-test per acceptance case. Input and expected-output fields appear as comments — fill in the struct fields and assertions to connect to your production code:
+
+```go
+func TestAcceptanceCases(t *testing.T) {
+    tests := []struct {
+        name    string
+        // TODO: add input and expected output fields
+        wantErr bool
+    }{
+        {
+            name:    "ORD-CANCEL-01: cancel pending order — no refund",
+            // order_id: 'ORD-100'
+            // order_status: 'pending'
+            // want new_status: 'cancelled'
+        },
+        // ... one entry per acceptance case
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            // TODO: call target function, assert results
+        })
+    }
+}
+```
+
 ## Requirements
 
 Python 3.10+ with PyYAML (`pip install pyyaml`). The `compute_fingerprint.py` and `validate_traceability.py` scripts use only the standard library.

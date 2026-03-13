@@ -30,8 +30,15 @@
 name: STDD CI
 
 on:
-  push:
-  pull_request:
+  # This is a reference workflow for projects that USE STDD. It will not
+  # trigger automatically in this methodology-documentation repo because
+  # there are no features/ or tests/ directories here.  Teams should copy
+  # this file into their own repo and uncomment the push/pull_request
+  # triggers below.
+  #
+  # push:
+  # pull_request:
+  workflow_dispatch:
 
 jobs:
   specification-integrity:
@@ -49,6 +56,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"          # caches pip downloads to speed up runs
 
       - name: Install dependencies
         run: pip install pytest
