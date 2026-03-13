@@ -56,8 +56,8 @@ Computes a SHA-256 hash of all specification and test files in an STDD project. 
 
 | ID | Description |
 |----|-------------|
-| FP-01 | All files in spec_dir are included in the hash, discovered recursively and sorted by relative path. |
-| FP-02 | All files in test_dir are included in the hash, discovered recursively and sorted by relative path. |
+| FP-01 | All knowledge-layer files in spec_dir are included in the hash, discovered recursively and sorted by relative path. Build artifacts (\_\_pycache\_\_, .pyc, .pytest\_cache) are excluded. |
+| FP-02 | All knowledge-layer files in test_dir are included in the hash, discovered recursively and sorted by relative path. Build artifacts are excluded. |
 | FP-03 | A directory label (`SPEC_DIR\n` or `TEST_DIR\n`) is written into the hash stream before each directory's files. |
 | FP-04 | Each file contributes its relative path (encoded as UTF-8) followed by its raw content to the hash. |
 | FP-05 | When --nfr-file is provided and the file exists, `NFR_FILE\n` label and file content are appended to the hash. |

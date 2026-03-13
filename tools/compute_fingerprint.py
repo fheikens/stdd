@@ -18,6 +18,19 @@ import sys
 
 FINGERPRINT_FILE = ".fingerprint"
 
+# Directories and file extensions that are build artifacts, not knowledge layer
+_SKIP_DIRS = {"__pycache__", ".pytest_cache", "node_modules", ".mypy_cache"}
+_SKIP_SUFFIXES = {".pyc", ".pyo"}
+
+
+def _is_knowledge_file(filepath: pathlib.Path) -> bool:
+    """Return True if filepath is a knowledge-layer file (not a build artifact)."""
+    if any(part in _SKIP_DIRS for part in filepath.parts):
+        return False
+    if filepath.suffix in _SKIP_SUFFIXES:
+        return False
+    return filepath.is_file()
+
 
 def compute_fingerprint(spec_dir: str, test_dir: str, nfr_file: str | None = None) -> str:
     """Hash all specification and test files to produce a fingerprint.
@@ -25,6 +38,9 @@ def compute_fingerprint(spec_dir: str, test_dir: str, nfr_file: str | None = Non
     Directory labels (SPEC_DIR, TEST_DIR, NFR_FILE) are written into the hash
     stream before each section to prevent theoretical path collisions between
     spec and test trees that happen to contain identically-named files.
+
+    Build artifacts (__pycache__, .pyc, .pytest_cache, etc.) are excluded so
+    the fingerprint remains stable across platforms and test runs.
     """
     hasher = hashlib.sha256()
 
@@ -36,7 +52,7 @@ def compute_fingerprint(spec_dir: str, test_dir: str, nfr_file: str | None = Non
             continue
         hasher.update(labels[directory])
         for filepath in sorted(path.rglob("*")):
-            if filepath.is_file():
+            if _is_knowledge_file(filepath):
                 hasher.update(str(filepath.relative_to(path)).encode())
                 hasher.update(filepath.read_bytes())
 

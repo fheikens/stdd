@@ -86,14 +86,5 @@ jobs:
       # Pure implementation changes (regeneration) do not affect the
       # fingerprint. Only spec or test changes trigger a mismatch.
       # ------------------------------------------------------------------
-      - name: "Gate 3: Debug — list files in knowledge layer"
-        run: |
-          echo "=== features/ ==="
-          find features/ -type f | sort
-          echo "=== tests/ ==="
-          find tests/ -type f | sort
-          echo "=== file checksums ==="
-          find features/ tests/ -type f | sort | xargs md5sum
-
       - name: "Gate 3: Verify specification fingerprint"
         run: python tools/compute_fingerprint.py --spec-dir features/ --test-dir tests/ --compare
