@@ -29,21 +29,30 @@ Checks that every specification ID found in markdown files has at least one corr
 python validate_traceability.py --spec-dir features/ --test-dir tests/
 ```
 
-Spec IDs are detected as `| WORD-NUMBER` patterns in markdown tables. Test references are detected as `WORD-NUMBER` patterns anywhere in test files (`test_*.py`, `*_test.py`, `*_test.go`, `test_*.go`).
+Spec IDs are detected in markdown tables (`| WORD-NUMBER`), headings (`## WORD-NUMBER`), and code comments (`# WORD-NUMBER`, `// WORD-NUMBER`). A custom pattern can be supplied via `--spec-pattern`. Multiple `--spec-dir` values are supported.
 
 ## yaml_to_pytests.py
 
-Generates a pytest test skeleton from an STDD `acceptance-cases.yaml` file. Each acceptance case becomes a test function with a docstring referencing the spec ID, commented inputs/outputs, and a `NotImplementedError` placeholder. Error cases (those with `error: true` in their `then` block) get a `pytest.raises` skeleton.
+Generates test skeletons from an STDD `acceptance-cases.yaml` file. Each acceptance case becomes a test function with a docstring referencing the spec ID. Error cases (those with `error: true` in their `then` block) get a `pytest.raises` skeleton.
 
 ```bash
-# Print generated tests to stdout
-python yaml_to_pytests.py examples/order-cancellation/acceptance-cases.yaml
+# Print generated Python tests to stdout
+python yaml_to_pytests.py acceptance-cases.yaml
 
 # Write directly to a file
-python yaml_to_pytests.py examples/order-cancellation/acceptance-cases.yaml --output tests/test_generated.py
+python yaml_to_pytests.py acceptance-cases.yaml --output tests/test_generated.py
+
+# Generate with import and call stubs
+python yaml_to_pytests.py acceptance-cases.yaml --module myapp.orders --function cancel_order
+
+# Generate Go table-driven test skeleton
+python yaml_to_pytests.py acceptance-cases.yaml --language go --output order_test.go
 ```
 
-The `--language` flag defaults to `python`. Go support could be added in a future version.
+**Flags:**
+- `--module` — adds `from MODULE import FUNCTION` to the generated file
+- `--function` — generates call stubs with arguments from the YAML inputs
+- `--language` — `python` (default) or `go` (table-driven test skeleton)
 
 ## Requirements
 

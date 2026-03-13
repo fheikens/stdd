@@ -34,6 +34,8 @@ Cover at least: one normal input, one boundary value, one invalid input, and one
 Translate each acceptance case into a test. One test per case. Each test docstring references its spec ID:
 
 ```python
+from decimal import Decimal
+
 def test_group_discount_applied():
     """FEAT-01: Groups of 4+ receive 10% discount."""
     result = calculate_price("Orchestra", "E1", group_size=4)
