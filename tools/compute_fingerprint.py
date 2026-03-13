@@ -29,6 +29,8 @@ def _is_knowledge_file(filepath: pathlib.Path) -> bool:
         return False
     if filepath.suffix in _SKIP_SUFFIXES:
         return False
+    if filepath.name.startswith("."):
+        return False
     return filepath.is_file()
 
 
