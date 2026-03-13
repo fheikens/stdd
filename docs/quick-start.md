@@ -31,7 +31,13 @@ Cover at least: one normal input, one boundary value, one invalid input, and one
 
 ### Step 3: Write Tests (~20 min)
 
-Translate each acceptance case into a test. One test per case. Each test docstring references its spec ID:
+Translate each acceptance case into a test. Or generate skeletons automatically:
+
+```
+python tools/yaml_to_pytests.py features/my_feature/acceptance-cases.yaml --output tests/test_my_feature.py
+```
+
+One test per case. Each test docstring references its spec ID:
 
 ```python
 from decimal import Decimal
