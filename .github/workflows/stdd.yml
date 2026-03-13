@@ -30,14 +30,8 @@
 name: STDD CI
 
 on:
-  # This is a reference workflow for projects that USE STDD. It will not
-  # trigger automatically in this methodology-documentation repo because
-  # there are no features/ or tests/ directories here.  Teams should copy
-  # this file into their own repo and uncomment the push/pull_request
-  # triggers below.
-  #
-  # push:
-  # pull_request:
+  push:
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -59,7 +53,7 @@ jobs:
           cache: "pip"          # caches pip downloads to speed up runs
 
       - name: Install dependencies
-        run: pip install pytest
+        run: pip install pytest pyyaml
 
       # ------------------------------------------------------------------
       # Gate 1 — Traceability validation

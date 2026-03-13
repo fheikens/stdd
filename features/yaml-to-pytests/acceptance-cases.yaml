@@ -1,0 +1,221 @@
+acceptance_cases:
+
+  # --- Python generation ---
+
+  - name: one test function per acceptance case
+    spec_id: GEN-01
+    given:
+      yaml_content:
+        acceptance_cases:
+          - name: "happy path"
+            spec_id: "FEAT-01"
+            given: { input: "value" }
+            when: { action: "do_thing" }
+            then: { result: "expected" }
+          - name: "edge case"
+            spec_id: "FEAT-02"
+            given: { input: "edge" }
+            when: { action: "do_thing" }
+            then: { result: "edge_result" }
+    when:
+      action: generate_python
+    then:
+      test_count: 2
+
+  - name: test function name is slugified
+    spec_id: GEN-02
+    given:
+      case_name: "cancel confirmed order -- refund triggered"
+    when:
+      action: slugify
+    then:
+      result: "cancel_confirmed_order_refund_triggered"
+
+  - name: docstring references spec ID
+    spec_id: GEN-03
+    given:
+      yaml_content:
+        acceptance_cases:
+          - name: "my test"
+            spec_id: "FEAT-01"
+            given: {}
+            when: {}
+            then: { status: "ok" }
+    when:
+      action: generate_python
+    then:
+      output_contains: "FEAT-01"
+
+  - name: error case gets pytest.raises skeleton
+    spec_id: GEN-04
+    given:
+      yaml_content:
+        acceptance_cases:
+          - name: "reject invalid input"
+            spec_id: "FEAT-03"
+            given: { input: "bad" }
+            when: { action: "validate" }
+            then:
+              error: true
+              error_code: "INVALID_INPUT"
+    when:
+      action: generate_python
+    then:
+      output_contains: "pytest.raises"
+
+  - name: non-error case gets assertion placeholders
+    spec_id: GEN-05
+    given:
+      yaml_content:
+        acceptance_cases:
+          - name: "success path"
+            spec_id: "FEAT-01"
+            given: { x: 1 }
+            when: { action: "compute" }
+            then: { total: 42, status: "done" }
+    when:
+      action: generate_python
+    then:
+      output_contains_assert_total: true
+      output_contains_assert_status: true
+
+  # --- Module and function flags ---
+
+  - name: module flag adds import statement
+    spec_id: GEN-06
+    given:
+      module: "myapp.orders"
+      function: "cancel_order"
+    when:
+      action: generate_python_with_module
+    then:
+      output_contains: "from myapp.orders import cancel_order"
+
+  - name: function flag merges given and when into kwargs
+    spec_id: GEN-07
+    given:
+      yaml_content:
+        acceptance_cases:
+          - name: "call with args"
+            spec_id: "FEAT-01"
+            given: { order_id: "ORD-100" }
+            when: { reason: "Changed my mind" }
+            then: { status: "cancelled" }
+      function: "cancel_order"
+    when:
+      action: generate_python_with_function
+    then:
+      output_contains: "cancel_order(order_id='ORD-100', reason='Changed my mind')"
+
+  - name: given keys appear before when keys in arguments
+    spec_id: GEN-08
+    given:
+      yaml_content:
+        acceptance_cases:
+          - name: "ordered args"
+            spec_id: "FEAT-01"
+            given: { a: 1, b: 2 }
+            when: { c: 3, d: 4 }
+            then: { result: 10 }
+      function: "compute"
+    when:
+      action: generate_python_with_function
+    then:
+      argument_order: "a=1, b=2, c=3, d=4"
+
+  # --- Go generation ---
+
+  - name: Go table-driven skeleton generated
+    spec_id: GEN-09
+    given:
+      yaml_content:
+        acceptance_cases:
+          - name: "go test case"
+            spec_id: "FEAT-01"
+            given: { input: "value" }
+            when: { action: "process" }
+            then: { result: "ok" }
+    when:
+      action: generate_go
+    then:
+      output_contains_func: "func TestAcceptanceCases"
+      output_contains_struct: "tests := []struct"
+
+  # --- Output file ---
+
+  - name: output flag writes to file
+    spec_id: GEN-10
+    given:
+      yaml_content:
+        acceptance_cases:
+          - name: "written to file"
+            spec_id: "FEAT-01"
+            given: {}
+            when: {}
+            then: { ok: true }
+      output_path: "tests/test_output.py"
+    when:
+      action: generate_python_to_file
+    then:
+      file_created: true
+
+  # --- YAML key variants ---
+
+  - name: accepts acceptance-cases key with hyphen
+    spec_id: GEN-11
+    given:
+      yaml_content_raw: "acceptance-cases:\n  - name: test\n    spec_id: X-01\n    given: {}\n    when: {}\n    then: {ok: true}"
+    when:
+      action: load_cases
+    then:
+      cases_loaded: 1
+
+  # --- Error conditions ---
+
+  - name: file not found exits with code 1
+    spec_id: GEN-12
+    given:
+      yaml_file: "nonexistent.yaml"
+    when:
+      action: generate_python
+    then:
+      error: true
+      exit_code: 1
+
+  - name: invalid YAML structure exits with code 1
+    spec_id: GEN-13
+    given:
+      yaml_content_raw: "- just a list"
+    when:
+      action: load_cases
+    then:
+      error: true
+      exit_code: 1
+
+  # --- Slugify ---
+
+  - name: slugify produces valid Python identifier
+    spec_id: GEN-14
+    given:
+      name: "Cancel Order -- with special chars! & stuff"
+    when:
+      action: slugify
+    then:
+      result: "cancel_order_with_special_chars_stuff"
+
+  # --- Invariants ---
+
+  - name: generated Python code is syntactically valid
+    spec_id: GEN-INV-03
+    given:
+      yaml_content:
+        acceptance_cases:
+          - name: "valid syntax"
+            spec_id: "FEAT-01"
+            given: { x: 1 }
+            when: { action: "test" }
+            then: { result: true }
+    when:
+      action: generate_python_and_parse
+    then:
+      ast_parse_succeeds: true

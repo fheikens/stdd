@@ -1,0 +1,177 @@
+acceptance_cases:
+
+  # --- Happy paths ---
+
+  - name: all specifications covered by tests
+    spec_id: TR-07
+    given:
+      spec_files:
+        - content: "| FEAT-01 | description |\n| FEAT-02 | description |"
+      test_files:
+        - name: "test_feature.py"
+          content: "FEAT-01 FEAT-02"
+    when:
+      action: validate_traceability
+    then:
+      exit_code: 0
+      missing_count: 0
+
+  # --- Detection patterns ---
+
+  - name: detect spec ID in table row
+    spec_id: TR-02
+    given:
+      spec_files:
+        - content: "| FEAT-01 | Rule description |"
+      test_files:
+        - name: "test_feature.py"
+          content: "FEAT-01"
+    when:
+      action: validate_traceability
+    then:
+      spec_found: "FEAT-01"
+
+  - name: detect spec ID in heading
+    spec_id: TR-03
+    given:
+      spec_files:
+        - content: "## FEAT-01 Rule description"
+      test_files:
+        - name: "test_feature.py"
+          content: "FEAT-01"
+    when:
+      action: validate_traceability
+    then:
+      spec_found: "FEAT-01"
+
+  - name: detect spec ID in hash comment
+    spec_id: TR-04
+    given:
+      spec_files:
+        - content: "# FEAT-01"
+      test_files:
+        - name: "test_feature.py"
+          content: "FEAT-01"
+    when:
+      action: validate_traceability
+    then:
+      spec_found: "FEAT-01"
+
+  - name: detect spec ID in slash comment
+    spec_id: TR-05
+    given:
+      spec_files:
+        - content: "// FEAT-01"
+      test_files:
+        - name: "test_feature.py"
+          content: "FEAT-01"
+    when:
+      action: validate_traceability
+    then:
+      spec_found: "FEAT-01"
+
+  # --- Untested specifications ---
+
+  - name: untested specification causes failure
+    spec_id: TR-08
+    given:
+      spec_files:
+        - content: "| FEAT-01 | tested |\n| FEAT-02 | untested |"
+      test_files:
+        - name: "test_feature.py"
+          content: "FEAT-01"
+    when:
+      action: validate_traceability
+    then:
+      exit_code: 1
+      missing_count: 1
+
+  # --- Test file patterns ---
+
+  - name: scan test files matching naming patterns
+    spec_id: TR-06
+    given:
+      spec_files:
+        - content: "| FEAT-01 | rule |"
+      test_files:
+        - name: "test_a.py"
+          content: "FEAT-01"
+    when:
+      action: validate_traceability
+    then:
+      spec_covered: "FEAT-01"
+
+  # --- Error conditions ---
+
+  - name: non-existent spec directory
+    spec_id: TR-09
+    given:
+      spec_dir: "nonexistent/"
+      test_dir: "tests/"
+    when:
+      action: validate_traceability
+    then:
+      error: true
+      exit_code: 1
+
+  - name: non-existent test directory
+    spec_id: TR-10
+    given:
+      spec_dir: "features/"
+      test_dir: "nonexistent/"
+    when:
+      action: validate_traceability
+    then:
+      error: true
+      exit_code: 1
+
+  # --- Multiple spec directories ---
+
+  - name: multiple spec directories all scanned
+    spec_id: TR-11
+    given:
+      spec_dirs:
+        - content: "| MOD-A-01 | from first dir |"
+        - content: "| MOD-B-01 | from second dir |"
+      test_files:
+        - name: "test_all.py"
+          content: "MOD-A-01 MOD-B-01"
+    when:
+      action: validate_traceability_multi_dir
+    then:
+      exit_code: 0
+      specs_found: 2
+
+  # --- Custom pattern ---
+
+  - name: custom spec pattern overrides default
+    spec_id: TR-12
+    given:
+      spec_files:
+        - content: "| REQ-123 | requirement |"
+      test_files:
+        - name: "test_reqs.py"
+          content: "REQ-123"
+      spec_pattern: "REQ-\\d+"
+    when:
+      action: validate_traceability_custom_pattern
+    then:
+      exit_code: 0
+      spec_found: "REQ-123"
+
+  # --- Reporting ---
+
+  - name: report shows covered and missing counts
+    spec_id: TR-13
+    given:
+      spec_files:
+        - content: "| FEAT-01 | tested |\n| FEAT-02 | untested |"
+      test_files:
+        - name: "test_feature.py"
+          content: "FEAT-01"
+    when:
+      action: validate_traceability
+    then:
+      stdout_contains: "Specifications found: 2"
+      stdout_contains_covered: "Covered by tests:     1"
+      stdout_contains_missing: "Missing tests:        1"

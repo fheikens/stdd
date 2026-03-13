@@ -120,12 +120,35 @@ Start with the Quick Start to build your first feature. Then go deeper based on 
 
 ## Repository Structure
 
-This repository contains the **STDD methodology documentation**, not a project built with STDD. The canonical `features/` + `implementations/` structure described in the [Engineering Playbook](docs/engineering-playbook.md) applies to projects that *use* STDD.
+This repository contains the STDD methodology documentation **and** applies STDD to its own tools. The `features/` and `tests/` directories specify and verify the three Python tools — the CI workflow enforces all three CSI gates on every push.
 
 ```
 stdd/
 ├── README.md
 ├── manifesto.md
+├── .fingerprint                     ← specification fingerprint
+│
+├── features/                        ← STDD applied to its own tools
+│   ├── compute-fingerprint/
+│   │   ├── specification.md
+│   │   └── acceptance-cases.yaml
+│   ├── validate-traceability/
+│   │   ├── specification.md
+│   │   └── acceptance-cases.yaml
+│   ├── yaml-to-pytests/
+│   │   ├── specification.md
+│   │   └── acceptance-cases.yaml
+│   └── traceability-matrix.md
+│
+├── tests/                           ← 52 tests, 100% spec coverage
+│   ├── test_compute_fingerprint.py
+│   ├── test_validate_traceability.py
+│   └── test_yaml_to_pytests.py
+│
+├── tools/                           ← reference CSI scripts
+│   ├── compute_fingerprint.py
+│   ├── validate_traceability.py
+│   └── yaml_to_pytests.py
 │
 ├── docs/
 │   ├── quick-start.md               ← start here
@@ -158,12 +181,7 @@ stdd/
 │   ├── traceability-matrix.md
 │   └── tfp-prompt.md
 │
-├── tools/                           ← reference CSI scripts
-│   ├── compute_fingerprint.py
-│   ├── validate_traceability.py
-│   └── yaml_to_pytests.py
-│
-├── .github/workflows/stdd.yml      ← reference CI workflow
+├── .github/workflows/stdd.yml      ← CI workflow (runs on every push)
 │
 └── diagrams/
     ├── stdd_development_loop.md

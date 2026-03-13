@@ -1,0 +1,147 @@
+acceptance_cases:
+
+  # --- Happy paths ---
+
+  - name: compute fingerprint from spec and test directories
+    spec_id: FP-01
+    given:
+      spec_dir: "features/"
+      test_dir: "tests/"
+      spec_files: ["spec.md"]
+      test_files: ["test_example.py"]
+    when:
+      action: compute_fingerprint
+    then:
+      fingerprint_length: 64
+      fingerprint_format: hex
+
+  - name: deterministic hash — same inputs produce same output
+    spec_id: FP-08
+    given:
+      spec_dir: "features/"
+      test_dir: "tests/"
+      spec_files: ["spec.md"]
+      test_files: ["test_example.py"]
+    when:
+      action: compute_fingerprint
+      invocations: 2
+    then:
+      both_hashes_equal: true
+
+  - name: content change produces different hash
+    spec_id: FP-INV-02
+    given:
+      spec_dir: "features/"
+      test_dir: "tests/"
+      spec_files: ["spec.md"]
+      test_files: ["test_example.py"]
+    when:
+      action: modify_spec_file_then_recompute
+    then:
+      hashes_differ: true
+
+  # --- Directory labels ---
+
+  - name: hash includes directory labels
+    spec_id: FP-03
+    given:
+      spec_dir: "features/"
+      test_dir: "tests/"
+      identical_file_in_both: "shared.md"
+    when:
+      action: compute_fingerprint
+    then:
+      hash_differs_from_unlabeled: true
+
+  # --- NFR file ---
+
+  - name: NFR file included when present
+    spec_id: FP-05
+    given:
+      spec_dir: "features/"
+      test_dir: "tests/"
+      nfr_file: "nfr.md"
+      nfr_file_exists: true
+    when:
+      action: compute_fingerprint_with_nfr
+    then:
+      hash_differs_from_without_nfr: true
+
+  - name: NFR file silently skipped when absent
+    spec_id: FP-06
+    given:
+      spec_dir: "features/"
+      test_dir: "tests/"
+      nfr_file: "nonexistent.md"
+      nfr_file_exists: false
+    when:
+      action: compute_fingerprint_with_nfr
+    then:
+      hash_equals_without_nfr: true
+
+  # --- Missing directories ---
+
+  - name: missing directory prints warning but continues
+    spec_id: FP-07
+    given:
+      spec_dir: "nonexistent/"
+      test_dir: "tests/"
+    when:
+      action: compute_fingerprint
+    then:
+      warning_printed: true
+      returns_hash: true
+
+  # --- Compare mode ---
+
+  - name: compare matches stored fingerprint
+    spec_id: FP-09
+    given:
+      fingerprint_file_content: "matching_hash"
+    when:
+      action: compute_fingerprint_compare
+    then:
+      exit_code: 0
+
+  - name: compare detects mismatch
+    spec_id: FP-10
+    given:
+      fingerprint_file_content: "wrong_hash"
+    when:
+      action: compute_fingerprint_compare
+    then:
+      exit_code: 1
+
+  - name: compare with no fingerprint file — first run
+    spec_id: FP-11
+    given:
+      fingerprint_file_exists: false
+    when:
+      action: compute_fingerprint_compare
+    then:
+      exit_code: 0
+
+  # --- Update mode ---
+
+  - name: update writes hash to fingerprint file
+    spec_id: FP-12
+    given:
+      spec_dir: "features/"
+      test_dir: "tests/"
+    when:
+      action: compute_fingerprint_update
+    then:
+      fingerprint_file_created: true
+      file_ends_with_newline: true
+
+  # --- Stdout output ---
+
+  - name: hash always printed to stdout
+    spec_id: FP-13
+    given:
+      spec_dir: "features/"
+      test_dir: "tests/"
+    when:
+      action: compute_fingerprint
+    then:
+      stdout_contains_hash: true
