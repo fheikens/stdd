@@ -17,6 +17,7 @@ Date: 2026
 - [5. Anatomy of a Feature Specification](#5-anatomy-of-a-feature-specification)
 - [6. Writing Behavioral Scenarios](#6-writing-behavioral-scenarios)
 - [7. Writing Invariants](#7-writing-invariants)
+  - [7.1 Property-Based Testing for Invariants](#71-property-based-testing-for-invariants)
 - [8. Defining Acceptance Cases](#8-defining-acceptance-cases)
 - [9. Declaring Technology and Domain Context](#9-declaring-technology-and-domain-context)
 - [10. From Vague to Precise](#10-from-vague-to-precise)
@@ -382,6 +383,48 @@ An invariant says: "Regardless of what happens, Z must always be true."
 Invariants are particularly valuable for catching edge cases that individual scenarios might miss.
 
 When AI generates an implementation, invariant tests verify that no combination of operations violates the fundamental rules of the system.
+
+## 7.1 Property-Based Testing for Invariants
+
+Scenario tests verify invariants against hand-picked examples. Property-based tests go further: they verify invariants across hundreds or thousands of randomly generated inputs. This makes them the natural test type for STDD invariants, because an invariant claims to hold universally, not just for a few cases.
+
+### Example: Discount Calculator Invariants
+
+```python
+from hypothesis import given, strategies as st
+
+@given(
+    order_total=st.decimals(min_value=0, max_value=10000, places=2),
+)
+def test_discount_never_exceeds_total(order_total):
+    """INV-01: Discount amount is always <= order total."""
+    discount = calculate_discount(order_total)
+    assert discount <= order_total
+    assert discount >= 0
+
+@given(
+    order_total=st.decimals(min_value=0, max_value=10000, places=2),
+)
+def test_exactly_one_discount_tier(order_total):
+    """INV-02: Exactly one discount tier applies per order."""
+    result = calculate_discount_details(order_total)
+    assert result.tier in ("none", "standard", "premium")
+```
+
+### Traceability
+
+Property tests participate in the traceability matrix (Section 13) just like scenario tests. Each property test references an invariant ID in its docstring, making the mapping explicit.
+
+| Specification Element | Test | Type |
+|---|---|---|
+| INV-01 | test_discount_never_exceeds_total | Property |
+| INV-02 | test_exactly_one_discount_tier | Property |
+
+This ensures that every invariant in the specification has a corresponding property test that verifies it across a wide input space, not just the examples chosen by the spec author.
+
+### Recording Failures as Regression Cases
+
+When a property test fails, Hypothesis reports the minimal failing example. Record this example as a new explicit acceptance case in the specification. It becomes a permanent regression test that persists even without Hypothesis, ensuring the defect stays caught regardless of which test framework or language is used in future regenerations.
 
 ---
 

@@ -65,7 +65,13 @@ H --> D
 
 ## Reading Guide
 
-Start with the manifesto and method. Then go deeper based on your role.
+Start with the Quick Start to build your first feature. Then go deeper based on your role.
+
+### Quick Start
+
+| Document | Description |
+|----------|-------------|
+| **[Quick Start](docs/quick-start.md)** | **Build your first STDD feature in 90 minutes** |
 
 ### Philosophy
 
@@ -107,7 +113,7 @@ Start with the manifesto and method. Then go deeper based on your role.
 | Resource | Description |
 |----------|-------------|
 | [Templates](templates/) | Copy-paste starter files for new STDD features |
-| [Tools](tools/) | Reference CSI scripts (fingerprint, traceability validation) |
+| [Tools](tools/) | CSI scripts (fingerprint, traceability) + acceptance-case test generator |
 | [CI Workflow](.github/workflows/stdd.yml) | GitHub Actions reference workflow for CSI |
 
 ---
@@ -122,6 +128,7 @@ stdd/
 ├── manifesto.md
 │
 ├── docs/
+│   ├── quick-start.md               ← start here
 │   ├── method.md
 │   ├── writing-specifications.md
 │   ├── architecture.md
@@ -153,7 +160,8 @@ stdd/
 │
 ├── tools/                           ← reference CSI scripts
 │   ├── compute_fingerprint.py
-│   └── validate_traceability.py
+│   ├── validate_traceability.py
+│   └── yaml_to_pytests.py
 │
 ├── .github/workflows/stdd.yml      ← reference CI workflow
 │

@@ -514,14 +514,21 @@ FINGERPRINT_FILE = ".fingerprint"
 
 
 def compute_fingerprint(spec_dir: str, test_dir: str, nfr_file: str | None = None) -> str:
-    """Hash all specification and test files to produce a fingerprint."""
+    """Hash all specification and test files to produce a fingerprint.
+
+    Directory labels (SPEC_DIR, TEST_DIR, NFR_FILE) are written into the hash
+    stream before each section to prevent theoretical path collisions between
+    spec and test trees that happen to contain identically-named files.
+    """
     hasher = hashlib.sha256()
 
+    labels = {spec_dir: b"SPEC_DIR\n", test_dir: b"TEST_DIR\n"}
     for directory in [spec_dir, test_dir]:
         path = pathlib.Path(directory)
         if not path.exists():
             print(f"Warning: directory {directory} does not exist", file=sys.stderr)
             continue
+        hasher.update(labels[directory])
         for filepath in sorted(path.rglob("*")):
             if filepath.is_file():
                 hasher.update(str(filepath.relative_to(path)).encode())
@@ -530,6 +537,7 @@ def compute_fingerprint(spec_dir: str, test_dir: str, nfr_file: str | None = Non
     if nfr_file:
         nfr_path = pathlib.Path(nfr_file)
         if nfr_path.exists():
+            hasher.update(b"NFR_FILE\n")
             hasher.update(nfr_path.read_bytes())
 
     return hasher.hexdigest()
@@ -609,8 +617,18 @@ The CI pipeline computes a fresh fingerprint and compares it to the stored one. 
 
 Usage:
     python validate_traceability.py --spec-dir features/ --test-dir tests/
+    python validate_traceability.py --spec-dir features/ --spec-dir modules/ --test-dir tests/
+    python validate_traceability.py --spec-dir features/ --test-dir tests/ --spec-pattern "REQ-\\d+"
 
-Scans all .md files in spec-dir for spec IDs (pattern: | WORD-NUMBER in tables).
+Scans all .md files in each spec-dir for spec IDs. By default, IDs are
+detected using the pattern WORD-NUMBER in the following locations:
+  - Markdown table rows:   | WORD-NUMBER ...
+  - Markdown headings:     ## ... WORD-NUMBER ...
+  - Code fence comments:   # WORD-NUMBER   or   // WORD-NUMBER
+
+A custom spec ID pattern can be supplied via --spec-pattern (default: \\w+-\\d+).
+Multiple --spec-dir values are supported to scan several specification trees.
+
 Scans all test files in test-dir for references to those IDs in docstrings,
 comments, or test names.
 
@@ -624,48 +642,71 @@ import pathlib
 import re
 import sys
 
-SPEC_ID_PATTERN = re.compile(r"^\|\s*(\w+-\d+)", re.MULTILINE)
+DEFAULT_SPEC_ID_PATTERN = r"\w+-\d+"
 TEST_FILE_PATTERNS = ["test_*.py", "*_test.py", "*_test.go", "test_*.go"]
 
 
-def find_spec_ids(spec_dir: str) -> dict[str, str]:
-    """Find all spec IDs in .md files. Returns {id: source_file}."""
-    spec_ids = {}
-    spec_path = pathlib.Path(spec_dir)
-    if not spec_path.exists():
-        print(f"Error: spec directory {spec_dir} does not exist", file=sys.stderr)
-        sys.exit(1)
+def _build_spec_id_patterns(spec_pattern: str) -> list[re.Pattern]:
+    """Build the list of compiled regexes used to detect spec IDs."""
+    return [
+        # Table rows: | SPEC-123 ...
+        re.compile(rf"^\|\s*({spec_pattern})", re.MULTILINE),
+        # Markdown headings: ## ... SPEC-123 ...
+        re.compile(rf"^#+.*\b({spec_pattern})\b", re.MULTILINE),
+        # Hash comment: # SPEC-123
+        re.compile(rf"#\s+({spec_pattern})"),
+        # Slash comment: // SPEC-123
+        re.compile(rf"//\s+({spec_pattern})"),
+    ]
 
-    for md_file in sorted(spec_path.rglob("*.md")):
-        for match in SPEC_ID_PATTERN.finditer(md_file.read_text()):
-            spec_ids[match.group(1)] = str(md_file)
+
+def find_spec_ids(spec_dirs: list[str], spec_pattern: str) -> dict[str, str]:
+    """Find all spec IDs in .md files. Returns {id: source_file}."""
+    spec_ids: dict[str, str] = {}
+    patterns = _build_spec_id_patterns(spec_pattern)
+
+    for spec_dir in spec_dirs:
+        spec_path = pathlib.Path(spec_dir)
+        if not spec_path.exists():
+            print(f"Error: spec directory {spec_dir} does not exist", file=sys.stderr)
+            sys.exit(1)
+
+        for md_file in sorted(spec_path.rglob("*.md")):
+            content = md_file.read_text()
+            for pattern in patterns:
+                for match in pattern.finditer(content):
+                    spec_ids[match.group(1)] = str(md_file)
     return spec_ids
 
 
-def find_tested_ids(test_dir: str) -> set[str]:
+def find_tested_ids(test_dir: str, spec_pattern: str) -> set[str]:
     """Scan test files for spec ID references."""
-    tested = set()
+    tested: set[str] = set()
     test_path = pathlib.Path(test_dir)
     if not test_path.exists():
         print(f"Error: test directory {test_dir} does not exist", file=sys.stderr)
         sys.exit(1)
 
+    id_re = re.compile(rf"\b({spec_pattern})\b")
     for pattern in TEST_FILE_PATTERNS:
         for test_file in sorted(test_path.rglob(pattern)):
             content = test_file.read_text()
-            for match in re.finditer(r"\b(\w+-\d+)\b", content):
+            for match in id_re.finditer(content):
                 tested.add(match.group(1))
     return tested
 
 
 def main():
     parser = argparse.ArgumentParser(description="STDD Traceability Validator")
-    parser.add_argument("--spec-dir", required=True, help="Directory containing specifications")
+    parser.add_argument("--spec-dir", required=True, action="append",
+                        help="Directory containing specifications (may be repeated)")
     parser.add_argument("--test-dir", required=True, help="Directory containing tests")
+    parser.add_argument("--spec-pattern", default=DEFAULT_SPEC_ID_PATTERN,
+                        help="Regex pattern for spec IDs (default: %(default)s)")
     args = parser.parse_args()
 
-    spec_ids = find_spec_ids(args.spec_dir)
-    tested_ids = find_tested_ids(args.test_dir)
+    spec_ids = find_spec_ids(args.spec_dir, args.spec_pattern)
+    tested_ids = find_tested_ids(args.test_dir, args.spec_pattern)
 
     covered = []
     missing = []
@@ -777,6 +818,34 @@ STDD is a disciplined process, but things still go wrong. This catalog documents
 - **Symptom**: AI can only generate one possible implementation, or trivial refactoring breaks tests.
 - **Cause**: Specification describes HOW instead of WHAT.
 - **Recovery**: Rewrite specification to focus on inputs, outputs, and invariants — not on internal steps or data structures.
+
+### 7.7 When regeneration fails repeatedly
+
+Sometimes AI cannot generate a passing implementation despite multiple attempts. This is a signal, not a dead end. Follow this escalation procedure:
+
+**Step 1: Clarify constraints (attempt 2).** Add explicit constraints the AI may have missed. Highlight the specific failing test and explain why it fails in the prompt.
+
+**Step 2: Decompose further (attempt 3).** Break the function into two or more smaller functions. Generate each separately. The original function becomes a thin orchestrator.
+
+**Step 3: Seed with invariants (attempt 4).** Add invariant assertions directly into the prompt as "the implementation MUST satisfy these properties." This narrows the solution space.
+
+**Step 4: Introduce contracts (attempt 5).** If the function depends on other components, make the contracts explicit in the prompt. Specify exact method signatures, return types, and error conditions.
+
+**Step 5: Set a retry budget and stop.** After 5 attempts, stop generating. The specification or decomposition needs human attention. Either:
+- The specification is ambiguous (rewrite it)
+- The component is too complex (decompose further)
+- The function requires domain knowledge AI lacks (write it manually, then add it to the knowledge layer for future regeneration)
+
+**Timebox guidance by complexity:**
+
+| Complexity | Description | Max attempts | Timebox |
+|-----------|-------------|-------------|---------|
+| Simple | Single function, ~20 lines, clear inputs/outputs | 2 | 15 min |
+| Standard | Single function, ~50 lines, some edge cases | 3 | 30 min |
+| Complex | Component with dependencies, ~50 lines, contracts | 5 | 60 min |
+| Integration | Multi-component collaboration | 5 | 90 min |
+
+If the timebox expires, the specification needs strengthening — not more generation attempts.
 
 ---
 

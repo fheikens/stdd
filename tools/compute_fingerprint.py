@@ -20,14 +20,21 @@ FINGERPRINT_FILE = ".fingerprint"
 
 
 def compute_fingerprint(spec_dir: str, test_dir: str, nfr_file: str | None = None) -> str:
-    """Hash all specification and test files to produce a fingerprint."""
+    """Hash all specification and test files to produce a fingerprint.
+
+    Directory labels (SPEC_DIR, TEST_DIR, NFR_FILE) are written into the hash
+    stream before each section to prevent theoretical path collisions between
+    spec and test trees that happen to contain identically-named files.
+    """
     hasher = hashlib.sha256()
 
+    labels = {spec_dir: b"SPEC_DIR\n", test_dir: b"TEST_DIR\n"}
     for directory in [spec_dir, test_dir]:
         path = pathlib.Path(directory)
         if not path.exists():
             print(f"Warning: directory {directory} does not exist", file=sys.stderr)
             continue
+        hasher.update(labels[directory])
         for filepath in sorted(path.rglob("*")):
             if filepath.is_file():
                 hasher.update(str(filepath.relative_to(path)).encode())
@@ -36,6 +43,7 @@ def compute_fingerprint(spec_dir: str, test_dir: str, nfr_file: str | None = Non
     if nfr_file:
         nfr_path = pathlib.Path(nfr_file)
         if nfr_path.exists():
+            hasher.update(b"NFR_FILE\n")
             hasher.update(nfr_path.read_bytes())
 
     return hasher.hexdigest()

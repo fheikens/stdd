@@ -3,7 +3,7 @@
 ## Testable Quality Constraints for Specification & Test‑Driven Development
 
 Author: Frank Heikens
-Version: 1.0
+Version: 1.1
 Date: 2026
 
 ---
@@ -22,7 +22,8 @@ Date: 2026
 - [10. Integrating NFRs into the STDD Workflow](#10-integrating-nfrs-into-the-stdd-workflow)
 - [11. NFR Regeneration Safety](#11-nfr-regeneration-safety)
 - [12. Reference: Default NFR Sets](#12-reference-default-nfr-sets)
-- [13. Conclusion](#13-conclusion)
+- [13. NFR Test Examples](#13-nfr-test-examples)
+- [14. Conclusion](#14-conclusion)
 
 ---
 
@@ -532,7 +533,95 @@ The following tables summarize the default NFRs by trigger type.
 
 ---
 
-# 13. Conclusion
+# 13. NFR Test Examples
+
+The following test snippets are ready to copy into a project's test suite. Each demonstrates how to verify a specific non‑functional requirement as a repeatable, automated test.
+
+## 13.1 Schema Validation
+
+Test that an API response matches the expected JSON structure.
+
+```python
+def test_order_response_schema():
+    """NFR-SCHEMA-01: API responses conform to documented schema."""
+    response = api.get_order("ORD-123")
+    assert "order_id" in response
+    assert "status" in response
+    assert "total" in response
+    assert isinstance(response["total"], (int, float, Decimal))
+```
+
+## 13.2 Response Timeout
+
+Test that operations complete within acceptable bounds.
+
+```python
+def test_calculate_price_performance():
+    """NFR-PERF-01: Price calculation completes within 100ms."""
+    import time
+    start = time.monotonic()
+    calculate_price("Orchestra", "E1", 4)
+    elapsed = time.monotonic() - start
+    assert elapsed < 0.1, f"Price calculation took {elapsed:.3f}s, exceeds 100ms limit"
+```
+
+## 13.3 SQL Parameterization / Injection Prevention
+
+Test that user inputs are properly sanitized through parameterized queries.
+
+```python
+def test_sql_injection_prevented():
+    """NFR-SEC-01: User inputs are parameterized, not interpolated."""
+    malicious_input = "'; DROP TABLE orders; --"
+    result = search_orders(query=malicious_input)
+    assert result == []  # Returns empty, does not raise or corrupt
+```
+
+## 13.4 Security Headers
+
+Test that responses include required security headers.
+
+```python
+def test_security_headers_present():
+    """NFR-SEC-02: API responses include required security headers."""
+    response = client.get("/api/orders")
+    assert "X-Content-Type-Options" in response.headers
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert "X-Frame-Options" in response.headers
+```
+
+## 13.5 Attaching NFRs to Specifications
+
+NFR tests are most effective when they are traced back to specifications alongside functional requirements.
+
+**Use NFR IDs in the traceability matrix.** Every NFR test carries an identifier (NFR-PERF-01, NFR-SEC-01, NFR-SCHEMA-01, etc.). These IDs appear in the traceability matrix next to the functional spec IDs they constrain.
+
+Example traceability matrix row:
+
+| Specification Rule | Test | Type |
+|---|---|---|
+| PRICE-01: Base price by section | test_base_price_orchestra | Functional |
+| PRICE-02: Group discount | test_group_discount_four_tickets | Functional |
+| NFR-PERF-01: Price calc < 100ms | test_calculate_price_performance | Non‑Functional |
+| NFR-SEC-01: Inputs parameterized | test_sql_injection_prevented | Non‑Functional |
+
+**Add NFR constraints to TFP prompts.** When using Test‑First Prompting, include activated NFRs in the Constraints section of the prompt so that AI‑generated implementations respect quality requirements from the start.
+
+Example Constraints section in a TFP prompt:
+
+```
+## Constraints
+- All prices must use Decimal, not float (PRICE-PRECISION)
+- Price calculation must complete within 100ms (NFR-PERF-01)
+- All database queries must use parameterized statements (NFR-SEC-01)
+- API responses must include X-Content-Type-Options and X-Frame-Options headers (NFR-SEC-02)
+```
+
+By mixing functional rule IDs (PRICE-01) and NFR rule IDs (NFR-PERF-01) in the same specification table and the same TFP prompt, teams ensure that quality constraints receive the same visibility and enforcement as behavioral requirements.
+
+---
+
+# 14. Conclusion
 
 Functional correctness is necessary but not sufficient.
 
