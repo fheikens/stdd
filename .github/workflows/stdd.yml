@@ -53,7 +53,7 @@ jobs:
           cache: "pip"          # caches pip downloads to speed up runs
 
       - name: Install dependencies
-        run: pip install pytest pyyaml
+        run: pip install -r requirements.txt
 
       # ------------------------------------------------------------------
       # Gate 1 — Traceability validation
