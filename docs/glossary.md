@@ -20,6 +20,8 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 
 **Coverage Grade** --- The ratio of specification elements (rules, invariants, failure conditions, NFRs) that are directly verified by at least one test. Each element is classified as COVERED, PARTIALLY COVERED, or UNCOVERED. Coverage Grade is one of the five STDD quality metrics and is automatically validated by the CSI pipeline's Gate 1. See [Metrics & Measurement](metrics.md), Section 5.
 
+**Consumer-Driven Contract** --- A contract pattern where consumers declare the subset of a provider's API they depend on (the contract fragment), and the provider ensures it delivers at least that subset. This reverses traditional API ownership: changes to the provider that would break a consumer's fragment are detected before deployment. See [System-Level STDD](system-level-stdd.md), Section 4.
+
 **Contract** --- A defined interface between two components specifying inputs, outputs, constraints, and failure conditions. Contracts enable independent regeneration because components depend on the contract, not on each other's implementations. See [Architecture](architecture.md), Section 5.
 
 **Defect Origin** --- A classification scheme for root-causing bugs. Every defect is traced to one of three origins: specification gap (the spec did not define the behavior), implementation bug (the spec and test existed but the code violated them), or test gap (the spec defined the behavior but no test verified it). Tracking defect origin over time reveals whether quality problems stem from the knowledge layer or the code layer. See [Metrics & Measurement](metrics.md), Section 8.
@@ -27,6 +29,8 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 **Decomposition** --- The practice of breaking large functions or components into smaller, well-specified units that are each within AI's reliable generation capability. STDD targets approximately 50 lines per function, each with its own specification and tests. See [Engineering Playbook](engineering-playbook.md), Section 4.
 
 **Dependency Injection** --- The primary architectural pattern that makes STDD components testable and regenerable. Components receive their dependencies as constructor parameters rather than creating them internally, allowing tests to inject fakes or alternative implementations. See [Architecture](architecture.md), Section 6.
+
+**Federated Fingerprint** --- A system-level specification fingerprint computed by hashing the individual fingerprints of all participating services. When any service's knowledge layer changes, the federated fingerprint changes, triggering system-level integration testing. See [System-Level STDD](system-level-stdd.md), Section 11.
 
 **Feature** --- A language-independent definition of what the system must do. A feature typically contains a specification, behavioral scenarios, invariants, acceptance cases, and canonical tests. In STDD, the feature is permanent; the implementation is replaceable. See [Features vs Implementations](features-vs-implementations.md), Section 3.
 
@@ -51,6 +55,10 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 **Regeneration Safe Zone** --- A category of code that is well suited for regeneration, such as business logic, application services, data transformations, and algorithmic components. Code that is not safe to regenerate (database schemas, external integrations, security boundaries) is maintained manually behind interfaces. See [Architecture](architecture.md), Section 8.
 
 **Requirement** --- A high-level description of desired system behavior or business intent. In STDD, a requirement must be refined into a precise, testable specification before it can be built. If a requirement cannot be tested, it does not exist. See [Manifesto](../manifesto.md), Terminology.
+
+**Saga** --- A distributed transaction pattern where a multi-step operation across services is implemented as a sequence of local transactions, each with a compensating action that undoes its effect if a subsequent step fails. Sagas replace two-phase commit in STDD because each step is independently specifiable and testable. See [System-Level STDD](system-level-stdd.md), Section 8.
+
+**Service Boundary Specification** --- A formal definition of the interface between two services, including protocol, endpoints or topics, request/response schemas, error conditions, invariants, and SLAs. Both the provider and consumer write tests against the boundary specification, ensuring changes to either side are detected. See [System-Level STDD](system-level-stdd.md), Section 3.
 
 **Specification** --- A precise, testable definition of system behavior derived from a requirement. A complete specification answers six questions: what does the system do, what are the inputs and outputs, what are the behavioral scenarios, what are the invariants, what are the failure conditions, and what are the constraints. See [Writing Specifications](writing-specifications.md), Section 3.
 

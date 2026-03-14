@@ -90,6 +90,7 @@ Start with the Quick Start to build your first feature. Then go deeper based on 
 | [Engineering Playbook](docs/engineering-playbook.md) | Applying STDD in real projects |
 | [AI Prompt Engineering](docs/prompt-engineering.md) | Writing specifications that AI gets right on the first attempt |
 | [Metrics & Measurement](docs/metrics.md) | Defining and measuring quality in STDD |
+| [System-Level STDD](docs/system-level-stdd.md) | Applying STDD across service boundaries |
 | [Adoption Guide](docs/adoption-guide.md) | How to adopt STDD in existing teams and projects |
 | [Versioning the Knowledge Layer](docs/versioning-the-knowledge-layer.md) | Version control for specifications and tests |
 | [Features vs Implementations](docs/features-vs-implementations.md) | Language independence in STDD |
@@ -161,6 +162,7 @@ stdd/
 │   ├── engineering-playbook.md
 │   ├── prompt-engineering.md
 │   ├── metrics.md
+│   ├── system-level-stdd.md
 │   ├── adoption-guide.md
 │   ├── versioning-the-knowledge-layer.md
 │   ├── features-vs-implementations.md
