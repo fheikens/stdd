@@ -18,7 +18,11 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 
 **Continuous Specification Integrity (CSI)** --- The CI/CD practice that ensures specifications, tests, and implementations never drift apart. A CSI pipeline enforces three gates: specification validation (traceability), test execution, and fingerprint verification. A build that breaks the fingerprint does not ship. See [Engineering Playbook](engineering-playbook.md), Section 5.
 
+**Coverage Grade** --- The ratio of specification elements (rules, invariants, failure conditions, NFRs) that are directly verified by at least one test. Each element is classified as COVERED, PARTIALLY COVERED, or UNCOVERED. Coverage Grade is one of the five STDD quality metrics and is automatically validated by the CSI pipeline's Gate 1. See [Metrics & Measurement](metrics.md), Section 5.
+
 **Contract** --- A defined interface between two components specifying inputs, outputs, constraints, and failure conditions. Contracts enable independent regeneration because components depend on the contract, not on each other's implementations. See [Architecture](architecture.md), Section 5.
+
+**Defect Origin** --- A classification scheme for root-causing bugs. Every defect is traced to one of three origins: specification gap (the spec did not define the behavior), implementation bug (the spec and test existed but the code violated them), or test gap (the spec defined the behavior but no test verified it). Tracking defect origin over time reveals whether quality problems stem from the knowledge layer or the code layer. See [Metrics & Measurement](metrics.md), Section 8.
 
 **Decomposition** --- The practice of breaking large functions or components into smaller, well-specified units that are each within AI's reliable generation capability. STDD targets approximately 50 lines per function, each with its own specification and tests. See [Engineering Playbook](engineering-playbook.md), Section 4.
 
@@ -36,7 +40,11 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 
 **NFR Profile** --- A reusable bundle of universal, technology-triggered, and domain-triggered non-functional requirements packaged for a common system type (e.g., Web Application Profile, Internal API Service Profile). Profiles serve as starting points that teams refine with project-specific overrides. See [NFR Framework](nfr-framework.md), Section 9.
 
+**Quality Score** --- A composite metric (0–1 scale) that combines the five STDD quality metrics — Specification Depth, Coverage Grade, Regeneration Confidence, Specification Stability, and Defect Origin — into a single number for reporting and comparison. Regeneration Confidence carries the highest weight because it is the most holistic measure of knowledge layer strength. See [Metrics & Measurement](metrics.md), Section 9.
+
 **Regeneration** --- The act of discarding an existing implementation and generating a new one from the specification and tests. Regeneration is not an emergency measure; it is a normal STDD operation. Code is deliberately disposable. See [Method](method.md), Section 9.
+
+**Regeneration Confidence** --- The most distinctive STDD quality metric. Measures whether an implementation can be discarded and regenerated from the specification and tests alone, with the new implementation passing all tests. A feature that passes regeneration demonstrates that the knowledge layer fully captures its behavior. See [Metrics & Measurement](metrics.md), Section 6.
 
 **Regeneration Loop** --- The central mechanism that distinguishes STDD from traditional test-first approaches. The loop consists of: keep specification, keep tests, discard implementation, generate new implementation, execute tests, accept if tests pass. This is only safe when the knowledge layer is strong enough to fully define the expected behavior. See [Method](method.md), Section 9.
 
@@ -46,7 +54,13 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 
 **Specification** --- A precise, testable definition of system behavior derived from a requirement. A complete specification answers six questions: what does the system do, what are the inputs and outputs, what are the behavioral scenarios, what are the invariants, what are the failure conditions, and what are the constraints. See [Writing Specifications](writing-specifications.md), Section 3.
 
+**Specification Readiness** --- A pre-generation checklist that verifies a specification is precise enough for AI generation. Readiness criteria include: every rule has a unique ID, every rule describes one behavior, constraints are quantified, failure conditions are explicit, boundaries are defined, and language is unambiguous. A specification that fails readiness checks is likely to require multiple generation attempts. See [AI Prompt Engineering](prompt-engineering.md), Section 10.
+
+**Specification Depth** --- A measure of how thoroughly a specification captures the behavior that matters, calculated as the count of rules, invariants, failure conditions, and NFRs. Shallow depth is a reliable signal of risk: a feature with few specified rules likely has unverified behavior. See [Metrics & Measurement](metrics.md), Section 4.
+
 **Specification Fingerprint** --- A cryptographic hash of the knowledge layer (specifications, tests, behavioral contracts, and acceptance cases) that defines a system's behavioral identity. Two implementations passing the same fingerprint are behaviorally equivalent, regardless of language or internal design. Pure implementation changes do not alter the fingerprint. See [Manifesto](../manifesto.md), Core Concepts; [Engineering Playbook](engineering-playbook.md), Section 5.
+
+**Specification Stability** --- A metric that tracks how often the knowledge layer changes relative to the implementation layer. High stability (few spec changes, many implementation changes) indicates a mature knowledge layer where the specification has settled. Low stability indicates the specification is still being discovered. The CSI fingerprint gate detects when implementation changes happen without corresponding specification updates. See [Metrics & Measurement](metrics.md), Section 7.
 
 **Specification Pyramid** --- A four-level model that ensures compositions are tested, not just individual parts. The levels are: unit (single function), component (multiple functions within one module), integration (multiple components collaborating), and system (full end-to-end workflows). Each level has its own specifications and tests. See [Method](method.md), Section 10.
 

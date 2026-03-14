@@ -88,6 +88,8 @@ Start with the Quick Start to build your first feature. Then go deeper based on 
 | [Architecture](docs/architecture.md) | Designing systems for safe regeneration |
 | [NFR Framework](docs/nfr-framework.md) | Non-functional requirements as testable constraints |
 | [Engineering Playbook](docs/engineering-playbook.md) | Applying STDD in real projects |
+| [AI Prompt Engineering](docs/prompt-engineering.md) | Writing specifications that AI gets right on the first attempt |
+| [Metrics & Measurement](docs/metrics.md) | Defining and measuring quality in STDD |
 | [Adoption Guide](docs/adoption-guide.md) | How to adopt STDD in existing teams and projects |
 | [Versioning the Knowledge Layer](docs/versioning-the-knowledge-layer.md) | Version control for specifications and tests |
 | [Features vs Implementations](docs/features-vs-implementations.md) | Language independence in STDD |
@@ -157,6 +159,8 @@ stdd/
 │   ├── architecture.md
 │   ├── nfr-framework.md
 │   ├── engineering-playbook.md
+│   ├── prompt-engineering.md
+│   ├── metrics.md
 │   ├── adoption-guide.md
 │   ├── versioning-the-knowledge-layer.md
 │   ├── features-vs-implementations.md
