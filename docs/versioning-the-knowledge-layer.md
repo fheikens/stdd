@@ -133,6 +133,8 @@ On any feature branch, the commit history should reflect the STDD workflow order
 
 This ordering makes the branch history readable as a narrative: here is what the system should do, here is how we verify it, and here is one way to make it happen. It also means that if the implementation is later regenerated, the spec and test commits remain untouched.
 
+**Exception:** For bug fixes where the behavioral specification already defines the correct behavior, the specification commit is not needed — only the implementation fix (and possibly a strengthened test) are committed. See the [Core Model](stdd-core-model.md) execution flows for details.
+
 ### PR review order mirrors commit order
 
 When reviewing a pull request, reviewers should read the spec diff first, then the test diff, then the implementation diff. This matches the STDD principle that behavioral intent drives everything. A spec change that is ambiguous or incomplete should block the entire PR, regardless of how clean the implementation looks.
@@ -248,6 +250,6 @@ By storing the knowledge layer in Git, organizations gain:
 
 ---
 
-For guidance on writing the specifications that form the knowledge layer, see [Writing Specifications](writing-specifications.md).
+For guidance on writing the specifications that form the knowledge layer, see [Writing Specifications](writing-specifications.md). For the specification taxonomy and artifact lifecycle model (DRAFT, ACTIVE, SUPERSEDED, DEPRECATED, REJECTED), see the [Core Model](stdd-core-model.md).
 
 For non-functional quality constraints that must be versioned alongside specifications, see [NFR Framework](nfr-framework.md). For CI/CD enforcement of specification integrity, see [Engineering Playbook](engineering-playbook.md), Section 5 (CSI).

@@ -135,7 +135,9 @@ The development process follows this sequence:
 4. Generate implementation  
 5. Execute tests  
 6. If tests fail → regenerate implementation  
-7. If tests pass → accept implementation  
+7. If tests pass → accept implementation
+
+This is the canonical flow for new features. Variations exist for other scenarios: behavior changes start with updating the existing specification; bug fixes where the specification already defines the correct behavior may proceed directly to fixing the implementation; and discovery work on existing systems starts by extracting the specification from observed behavior. See the [Core Model](stdd-core-model.md) for all execution flows.
 
 ---
 
@@ -345,6 +347,29 @@ A system specification says: "After a customer confirms a reservation, the seat 
 
 Each specification has its own tests. Each test maps back to its specification through the traceability matrix.
 
+## Behavioral Specifications vs Integration Mappings
+
+At the integration and system levels, two kinds of specification coexist. Keeping them distinct prevents a common source of confusion.
+
+A **behavioral specification** defines correctness — what the system must do. If the statement is violated, the system is wrong.
+
+An **integration mapping** defines a contract or adaptation — how components connect, how external data is translated, or what protocol is used at a boundary. If the mapping is violated, the wiring is broken.
+
+Both are needed at the integration level. They answer different questions.
+
+**Examples from the seat reservation system:**
+
+| Statement | Type | Why |
+|---|---|---|
+| "An expired hold cannot be confirmed" | Behavioral | Defines intended behavior. Violating it means the system allows invalid reservations. |
+| "After a failed confirmation of an expired hold, the seat returns to available" | Behavioral | Defines a correctness rule for a specific failure path. |
+| "PricingEngine.calculate() returns Decimal with 2 decimal places" | Integration mapping | Defines the contract between ReservationService and PricingEngine. |
+| "ReservationService catches pricing errors and reports them to the caller" | Integration mapping | Defines how the caller handles dependency failures. |
+
+**The rule:** If the statement defines what the system should do — intended behavior, correctness invariants, business rules — it is behavioral. If the statement explains how data flows across a boundary, what format a dependency uses, or how external system responses are mapped — it is an integration mapping.
+
+This does not mean that integration-level work is "merely mapping." Most integration-level specifications contain both behavioral rules (what the composed system must do) and contract rules (how the components connect). Both are important. The distinction matters because they have different test types, different traceability, and different maintenance patterns. See the [Core Model](stdd-core-model.md), Section 2, for the full taxonomy.
+
 ## Why Unit Tests Alone Are Not Enough
 
 Unit tests verify that each function does the right thing in isolation. But bugs hide in the gaps between functions:
@@ -430,13 +455,15 @@ Verify that the behavior remains correct.
 
 Allows implementations to evolve safely.
 
-When a system evolves:
+When a system's intended behavior evolves:
 
 1. The specification is updated
 2. New tests are added
 3. The implementation is regenerated
 
 This ensures system behavior evolves in a controlled and verifiable way.
+
+When the intended behavior has not changed but a bug is found (the implementation fails to satisfy the existing specification), the specification does not need updating. Instead, verify that a test covers the violated rule, fix the implementation, and run the full test suite. See the [Core Model](stdd-core-model.md) for execution flow details.
 
 ---
 

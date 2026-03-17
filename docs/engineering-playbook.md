@@ -855,6 +855,7 @@ These checklists codify the verification steps that teams perform at three criti
 
 ### Before Generation
 
+- [ ] Specification metadata is complete: Type is set, Status is ACTIVE, Version is current
 - [ ] Specification has inputs, outputs, invariants, and failure conditions
 - [ ] Every behavioral scenario has a corresponding test
 - [ ] Traceability matrix is complete (no untested spec IDs)

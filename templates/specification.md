@@ -1,6 +1,7 @@
 Feature: [FEATURE_NAME]
 Version: 1.0
-Status: draft
+Type: behavioral
+Status: DRAFT
 
 ---
 
@@ -44,25 +45,25 @@ Status: draft
 
 | ID | Description |
 |----|-------------|
-| RULE-1 | [Business rule that governs behavior, e.g. "Group discount of 10% applies for groups of 4 or more"] |
-| RULE-2 | [Another rule] |
-| RULE-3 | [Another rule] |
+| [PREFIX]-RULE-01 | [Business rule that governs behavior, e.g. "Group discount of 10% applies for groups of 4 or more"] |
+| [PREFIX]-RULE-02 | [Another rule] |
+| [PREFIX]-RULE-03 | [Another rule] |
 
 ## Invariants
 
 | ID | Description |
 |----|-------------|
-| INV-1 | [Rule that must always hold regardless of scenario, e.g. "Total must never be negative"] |
-| INV-2 | [Another invariant] |
-| INV-3 | [Another invariant] |
+| [PREFIX]-INV-01 | [Rule that must always hold regardless of scenario, e.g. "Total must never be negative"] |
+| [PREFIX]-INV-02 | [Another invariant] |
+| [PREFIX]-INV-03 | [Another invariant] |
 
 ## Failure Conditions
 
 | ID | Trigger | Response |
 |----|---------|----------|
-| FAIL-1 | [What goes wrong, e.g. "Input exceeds maximum length"] | [What the system does, e.g. "Return validation error with field name and constraint"] |
-| FAIL-2 | [Trigger] | [Response] |
-| FAIL-3 | [Trigger] | [Response] |
+| [PREFIX]-FAIL-01 | [What goes wrong, e.g. "Input exceeds maximum length"] | [What the system does, e.g. "Return validation error with field name and constraint"] |
+| [PREFIX]-FAIL-02 | [Trigger] | [Response] |
+| [PREFIX]-FAIL-03 | [Trigger] | [Response] |
 
 ## Constraints
 

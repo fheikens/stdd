@@ -3,6 +3,8 @@
 
 Every specification element maps to at least one test. Every test maps to a specification element.
 
+> **Note:** This matrix uses a simplified format. For the full STDD v2 traceability structure (including spec type, lifecycle status, test type, and coverage), see the [Core Model](../../docs/stdd-core-model.md), Section 6.2, or the [Worked Example](../../docs/worked-example-core-model.md), Section 5.
+
 ## Rules
 
 | Spec ID | Description | Test(s) |

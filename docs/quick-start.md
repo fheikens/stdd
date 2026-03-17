@@ -13,7 +13,7 @@ You have a feature to build. This guide gets you from zero to a regenerable, AI-
 
 ### Step 1: Define the Specification (~15 min)
 
-Copy `templates/specification.md` into your project. Fill in every section: inputs, outputs, rules, invariants, and failure conditions.
+Copy `templates/specification.md` into your project. Set `Type: behavioral` and `Status: DRAFT`. Fill in every section: inputs, outputs, rules, invariants, and failure conditions.
 
 Write one sentence per rule. If a rule takes a paragraph, your feature is too big -- decompose it into smaller features first.
 
@@ -88,6 +88,7 @@ This is the regeneration model working. The spec and tests *are* the system. The
 ## What's Next?
 
 - [Writing Specifications](writing-specifications.md) -- deeper guidance on precision, invariants, and failure conditions
+- [Core Model](stdd-core-model.md) -- specification types, test types, lifecycle states, and execution flows
 - [Engineering Playbook](engineering-playbook.md) -- CI setup, fingerprinting, and team workflows
 - [Adoption Guide](adoption-guide.md) -- rolling STDD out across a team
 - [Order Cancellation Example](../examples/order-cancellation/) -- a complete worked example with spec, tests, and implementation

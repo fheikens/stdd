@@ -3,8 +3,12 @@
 
 A complete STDD walkthrough from requirement to regeneration.
 
-Author: Frank Heikens
+Feature: Seat Reservation API
 Version: 1.0
+Type: behavioral
+Status: ACTIVE
+
+Author: Frank Heikens
 Date: 2026
 
 ---
@@ -771,6 +775,8 @@ No intermediate floating-point operations are permitted.
 # 9. Traceability Matrix
 
 Every specification statement maps to at least one test. Every test maps back to a specification.
+
+> **Note:** This matrix uses a simplified format. For the full STDD v2 traceability structure (including spec type, lifecycle status, test type, and coverage), see the [Core Model](../docs/stdd-core-model.md), Section 6.2, or the [Worked Example](../docs/worked-example-core-model.md), Section 5.
 
 | Spec ID | Specification | Test(s) |
 |---------|--------------|---------|

@@ -1,7 +1,7 @@
 # STDD Glossary
 
 Author: Frank Heikens
-Version: 1.0
+Version: 1.1
 Date: 2026
 
 Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
@@ -12,13 +12,19 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 
 **Behavioral Scenario** --- A specification element that describes system behavior under a specific condition using Given/When/Then form. Each scenario defines a precondition, an action, and an expected outcome, and must map to at least one executable test. See [Writing Specifications](writing-specifications.md), Section 6.
 
+**Behavioral Specification** --- A specification that defines what the system must do. The core STDD specification type. Behavioral specifications are authoritative, require tests for every rule, and answer six questions: what the system does, inputs/outputs, scenarios, invariants, failure conditions, and constraints. Behavioral specifications exist at all pyramid levels (unit through system). See [Core Model](stdd-core-model.md), Section 2.1.
+
 **Brownfield System** --- An existing system with established code, limited test coverage, and implicit specifications embedded in the implementation. STDD can be applied incrementally to brownfield systems using the strangler pattern. See [Architecture](architecture.md), Section 10.
+
+**Bug-Fix Flow** --- An execution flow for cases where a bug is found but the behavioral specification already defines the correct behavior. The fix proceeds by verifying test coverage for the violated rule, fixing the implementation, and running the full test suite. No specification update is needed because the specification was already correct. See [Core Model](stdd-core-model.md), Section 5.3.
 
 **Canonical Test** --- A behavior test that belongs to the feature definition rather than to any specific implementation. Canonical tests are expressed in a language-neutral format (typically YAML) and define the behavior that every implementation must satisfy. See [Features vs Implementations](features-vs-implementations.md), Section 6.
 
 **Continuous Specification Integrity (CSI)** --- The CI/CD practice that ensures specifications, tests, and implementations never drift apart. A CSI pipeline enforces three gates: specification validation (traceability), test execution, and fingerprint verification. A build that breaks the fingerprint does not ship. See [Engineering Playbook](engineering-playbook.md), Section 5.
 
 **Coverage Grade** --- The ratio of specification elements (rules, invariants, failure conditions, NFRs) that are directly verified by at least one test. Each element is classified as COVERED, PARTIALLY COVERED, or UNCOVERED. Coverage Grade is one of the five STDD quality metrics and is automatically validated by the CSI pipeline's Gate 1. See [Metrics & Measurement](metrics.md), Section 5.
+
+**Configuration Decision** --- A specification type that documents a technical or operational choice affecting system behavior, along with its rationale. Configuration decisions record the "why" behind technology selections, threshold values, and library choices. Tests are mandatory only when the decision has testable implications. See [Core Model](stdd-core-model.md), Section 2.3.
 
 **Consumer-Driven Contract** --- A contract pattern where consumers declare the subset of a provider's API they depend on (the contract fragment), and the provider ensures it delivers at least that subset. This reverses traditional API ownership: changes to the provider that would break a consumer's fragment are detected before deployment. See [System-Level STDD](system-level-stdd.md), Section 4.
 
@@ -30,13 +36,21 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 
 **Dependency Injection** --- The primary architectural pattern that makes STDD components testable and regenerable. Components receive their dependencies as constructor parameters rather than creating them internally, allowing tests to inject fakes or alternative implementations. See [Architecture](architecture.md), Section 6.
 
+**Execution Flow** --- A named sequence of steps for a specific development scenario. STDD defines four flows: New Feature (spec-first), Behavior Change (update spec first), Bug Fix where the spec is already correct (fix implementation, verify tests), and Discovery/Reverse Engineering (extract spec from reality). See [Core Model](stdd-core-model.md), Section 5.
+
 **Federated Fingerprint** --- A system-level specification fingerprint computed by hashing the individual fingerprints of all participating services. When any service's knowledge layer changes, the federated fingerprint changes, triggering system-level integration testing. See [System-Level STDD](system-level-stdd.md), Section 11.
 
 **Feature** --- A language-independent definition of what the system must do. A feature typically contains a specification, behavioral scenarios, invariants, acceptance cases, and canonical tests. In STDD, the feature is permanent; the implementation is replaceable. See [Features vs Implementations](features-vs-implementations.md), Section 3.
 
 **Implementation** --- A language-specific realization of a feature that satisfies the specification and passes all tests. Implementations are deliberately disposable artifacts in STDD; they can be discarded and regenerated at any time because the knowledge layer fully defines the expected behavior. See [Manifesto](../manifesto.md), Terminology.
 
+**Integration Mapping** --- A specification type that documents how components or services interact. Integration mappings define contracts: the protocol, schemas, error conditions, and invariants at a boundary between components. They are authoritative for the contract they define and require integration tests. Integration mappings may be prescribed before implementation or extracted from observed behavior during discovery. See [Core Model](stdd-core-model.md), Section 2.2.
+
+**Integration Test** --- A test that verifies components collaborate correctly across a boundary defined in an integration mapping. Integration tests prove that composed systems produce the right behavior when real components interact. They map to contract IDs and are tracked separately from requirement tests in the traceability matrix. See [Core Model](stdd-core-model.md), Section 3.2.
+
 **Invariant** --- A rule that must hold across all scenarios and all states of the system, regardless of the specific situation. Unlike scenarios that describe specific input-output pairs, invariants describe universal truths (e.g., "a balance must never be negative"). See [Writing Specifications](writing-specifications.md), Section 7.
+
+**Lifecycle State** --- The current status of a specification artifact. STDD defines five states: DRAFT (under development), ACTIVE (accepted and authoritative), SUPERSEDED (replaced by a newer version), DEPRECATED (scheduled for removal), and REJECTED (evaluated and declined). Lifecycle transitions follow explicit rules; an ACTIVE specification must never be deleted without first being SUPERSEDED or DEPRECATED. See [Core Model](stdd-core-model.md), Section 4.
 
 **Knowledge Layer** --- The permanent layer above the code consisting of specifications, tests, acceptance cases, invariants, and contracts. The knowledge layer defines the system. Implementations are generated from it and verified against it. Its quality determines whether regeneration is safe. See [Manifesto](../manifesto.md), Terminology.
 
@@ -46,6 +60,8 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 
 **Quality Score** --- A composite metric (0–1 scale) that combines the five STDD quality metrics — Specification Depth, Coverage Grade, Regeneration Confidence, Specification Stability, and Defect Origin — into a single number for reporting and comparison. Regeneration Confidence carries the highest weight because it is the most holistic measure of knowledge layer strength. See [Metrics & Measurement](metrics.md), Section 9.
 
+**Regression Artifact** --- A test artifact that captures a known-good output for comparison (e.g., golden files, snapshot tests). Unlike requirement tests, regression artifacts do not verify specific behavioral rules — they detect unintended changes in output. A specification rule verified only by a regression artifact is PARTIALLY COVERED. See [Core Model](stdd-core-model.md), Section 3.3.
+
 **Regeneration** --- The act of discarding an existing implementation and generating a new one from the specification and tests. Regeneration is not an emergency measure; it is a normal STDD operation. Code is deliberately disposable. See [Method](method.md), Section 9.
 
 **Regeneration Confidence** --- The most distinctive STDD quality metric. Measures whether an implementation can be discarded and regenerated from the specification and tests alone, with the new implementation passing all tests. A feature that passes regeneration demonstrates that the knowledge layer fully captures its behavior. See [Metrics & Measurement](metrics.md), Section 6.
@@ -54,13 +70,15 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 
 **Regeneration Safe Zone** --- A category of code that is well suited for regeneration, such as business logic, application services, data transformations, and algorithmic components. Code that is not safe to regenerate (database schemas, external integrations, security boundaries) is maintained manually behind interfaces. See [Architecture](architecture.md), Section 8.
 
-**Requirement** --- A high-level description of desired system behavior or business intent. In STDD, a requirement must be refined into a precise, testable specification before it can be built. If a requirement cannot be tested, it does not exist. See [Manifesto](../manifesto.md), Terminology.
+**Requirement** --- A high-level description of desired system behavior or business intent.
+
+**Requirement Test** --- A test that directly verifies a rule, invariant, or failure condition defined in a behavioral specification. Requirement tests are the primary mechanism by which STDD ensures correctness. Every behavioral specification rule must have at least one requirement test. Includes scenario tests, property-based tests, acceptance case tests, and failure condition tests. See [Core Model](stdd-core-model.md), Section 3.1. In STDD, a requirement must be refined into a precise, testable specification before it can be built. If a requirement cannot be tested, it does not exist. See [Manifesto](../manifesto.md), Terminology.
 
 **Saga** --- A distributed transaction pattern where a multi-step operation across services is implemented as a sequence of local transactions, each with a compensating action that undoes its effect if a subsequent step fails. Sagas replace two-phase commit in STDD because each step is independently specifiable and testable. See [System-Level STDD](system-level-stdd.md), Section 8.
 
 **Service Boundary Specification** --- A formal definition of the interface between two services, including protocol, endpoints or topics, request/response schemas, error conditions, invariants, and SLAs. Both the provider and consumer write tests against the boundary specification, ensuring changes to either side are detected. See [System-Level STDD](system-level-stdd.md), Section 3.
 
-**Specification** --- A precise, testable definition of system behavior derived from a requirement. A complete specification answers six questions: what does the system do, what are the inputs and outputs, what are the behavioral scenarios, what are the invariants, what are the failure conditions, and what are the constraints. See [Writing Specifications](writing-specifications.md), Section 3.
+**Specification** --- A precise, testable definition of system behavior derived from a requirement. STDD recognizes three specification types: behavioral specifications (defining what the system must do), integration mappings (defining how components connect), and configuration decisions (documenting technical choices). A complete behavioral specification answers six questions: what does the system do, what are the inputs and outputs, what are the behavioral scenarios, what are the invariants, what are the failure conditions, and what are the constraints. See [Writing Specifications](writing-specifications.md), Section 3; [Core Model](stdd-core-model.md), Section 2.
 
 **Specification Readiness** --- A pre-generation checklist that verifies a specification is precise enough for AI generation. Readiness criteria include: every rule has a unique ID, every rule describes one behavior, constraints are quantified, failure conditions are explicit, boundaries are defined, and language is unambiguous. A specification that fails readiness checks is likely to require multiple generation attempts. See [AI Prompt Engineering](prompt-engineering.md), Section 10.
 

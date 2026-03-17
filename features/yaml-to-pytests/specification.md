@@ -1,7 +1,8 @@
 # Feature: Test Skeleton Generator
 
 Version: 1.0
-Status: accepted
+Type: behavioral
+Status: ACTIVE
 
 ## Description
 

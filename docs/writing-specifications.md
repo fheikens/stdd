@@ -233,7 +233,8 @@ A feature specification follows a consistent structure.
 ```
 Feature: [Name]
 Version: [x.y]
-Status: [draft | review | accepted]
+Type: behavioral
+Status: [DRAFT | ACTIVE | SUPERSEDED | DEPRECATED | REJECTED]
 
 ---
 
@@ -287,7 +288,7 @@ Status: [draft | review | accepted]
 
 Each section serves a specific purpose. Omitting a section means the specification has a gap.
 
-The **Status** field tracks the specification through its lifecycle. A specification in `draft` status may still have open questions. A specification in `accepted` status is considered complete enough to drive test creation and implementation generation.
+The **Status** field tracks the specification through its lifecycle: DRAFT (under development, may have open questions), ACTIVE (accepted and authoritative, drives test creation and implementation generation), SUPERSEDED (replaced by a newer version), DEPRECATED (scheduled for removal), or REJECTED (evaluated and declined). See the [Core Model](stdd-core-model.md) for the full lifecycle definition.
 
 ---
 
@@ -713,7 +714,8 @@ The following templates can be used as starting points.
 ```markdown
 Feature: [Name]
 Version: 1.0
-Status: draft
+Type: behavioral
+Status: DRAFT
 
 ---
 
@@ -776,6 +778,8 @@ See: acceptance_cases.yaml
 Unit: [Function Name]
 Component: [Parent component]
 Version: 1.0
+Type: behavioral
+Status: DRAFT
 
 ---
 
@@ -812,7 +816,8 @@ Version: 1.0
 ```markdown
 Contract: [Name]
 Version: 1.0
-Status: draft
+Type: integration-mapping
+Status: DRAFT
 
 ---
 
@@ -845,7 +850,7 @@ Status: draft
 
 # 12. Specification Review Checklist
 
-Before a specification moves from `draft` to `accepted`, it should pass this checklist.
+Before a specification moves from DRAFT to ACTIVE, it should pass this checklist.
 
 ## Completeness
 
@@ -958,7 +963,7 @@ For each specification element, ask:
 - Does at least one test trigger this failure condition?
 - Are the test inputs and expected outputs consistent with the acceptance cases?
 
-If the answer to any of these is no, the gap must be closed before the specification moves to `accepted` status.
+If the answer to any of these is no, the gap must be closed before the specification moves to ACTIVE status.
 
 ## Strategy 4: Invariant Tests as Safety Nets
 

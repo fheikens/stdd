@@ -15,6 +15,8 @@ STDD defines systems using specifications and tests. AI generates the implementa
 
 This is the **regeneration model**: code is deliberately disposable because the specification and test layers are strong enough to verify any new implementation from scratch.
 
+**Validated on a real system.** STDD has been applied to the [Arq](https://github.com/fheikens/arq) project — 521 specification rules with full traceability and explicit coverage across all behavioral requirements, integration contracts, and non-functional constraints.
+
 ---
 
 ## The Manifesto
@@ -83,6 +85,7 @@ Start with the Quick Start to build your first feature. Then go deeper based on 
 
 | Document | Description |
 |----------|-------------|
+| [Core Model](docs/stdd-core-model.md) | Specification taxonomy, test taxonomy, lifecycle, execution flows, traceability rules |
 | [Method](docs/method.md) | The STDD workflow — how it works in practice |
 | [Writing Specifications](docs/writing-specifications.md) | How to write precise, testable specifications |
 | [Architecture](docs/architecture.md) | Designing systems for safe regeneration |
@@ -102,11 +105,13 @@ Start with the Quick Start to build your first feature. Then go deeper based on 
 | [Glossary](docs/glossary.md) | Quick reference for all STDD terminology |
 | [Anti-Patterns](reference/anti-patterns.md) | Common mistakes and how to avoid them |
 | [STDD vs Existing Methods](reference/vs-existing-methods.md) | Comparison with TDD, BDD, and other approaches |
+| [v2 Transition Notes](docs/stdd-v2-transition-notes.md) | What changed in v2 and how to interpret older documents |
 
 ### Examples
 
 | Document | Description |
 |----------|-------------|
+| [Worked Example: Core Model](docs/worked-example-core-model.md) | The v2 model applied to a real system — metadata, classification, traceability |
 | [Seat Reservation API](examples/seat-reservation.md) | Full end-to-end walkthrough: specs, tests, implementation, regeneration |
 | [Order Cancellation](examples/order-cancellation/) | Complete standalone feature: spec, tests, traceability, implementation |
 | [Short Examples](examples/examples.md) | Single-feature STDD examples |
@@ -155,6 +160,9 @@ stdd/
 │
 ├── docs/
 │   ├── quick-start.md               ← start here
+│   ├── stdd-core-model.md           ← v2 structural model
+│   ├── worked-example-core-model.md
+│   ├── stdd-v2-transition-notes.md
 │   ├── method.md
 │   ├── writing-specifications.md
 │   ├── architecture.md

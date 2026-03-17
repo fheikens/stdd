@@ -522,4 +522,4 @@ The implementation is replaceable.
 
 ---
 
-For guidance on writing feature specifications, see [Writing Specifications](writing-specifications.md). For non-functional quality constraints, see the [NFR Framework](nfr-framework.md). For a complete multi-language example, see the [Seat Reservation API](../examples/seat-reservation.md).
+For guidance on writing feature specifications, see [Writing Specifications](writing-specifications.md). For the specification taxonomy (behavioral specifications, integration mappings, and configuration decisions), see the [Core Model](stdd-core-model.md). For non-functional quality constraints, see the [NFR Framework](nfr-framework.md). For a complete multi-language example, see the [Seat Reservation API](../examples/seat-reservation.md).

@@ -68,6 +68,8 @@ Correct STDD workflow:
 3. Define tests
 4. Generate implementation
 
+**Exception:** When a bug is discovered and the behavioral specification already defines the correct behavior, the fix may proceed before updating tests. This is not writing code before specifications — the specification was already written. The implementation simply failed to follow it. See the [Core Model](../docs/stdd-core-model.md) for the full set of execution flows.
+
 When code is generated before behavior is defined, the implementation becomes the accidental definition of the system.
 
 ---

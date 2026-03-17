@@ -372,9 +372,9 @@ Do not migrate features that are stable and not being changed. That is unnecessa
 
 5. **Validate by regeneration (optional).** Discard the implementation, give AI the specification and tests, and see if the generated code passes all tests. If it does, the specification is strong enough for STDD. If it does not, strengthen the specification and add more tests.
 
-At this point, the feature is under STDD control. Future changes start with a specification update.
+At this point, the feature is under STDD control. Future behavioral changes start with a specification update. Bug fixes where the specification already defines the correct behavior can proceed directly — see the [Core Model](stdd-core-model.md) execution flows.
 
-For architectural guidance on handling tightly coupled components, global state, and other brownfield challenges, see [Architecture](architecture.md), Section 10.
+This migration process corresponds to the **Discovery and Reverse Engineering** execution flow defined in the [Core Model](stdd-core-model.md), Section 5.4. For architectural guidance on handling tightly coupled components, global state, and other brownfield challenges, see [Architecture](architecture.md), Section 10.
 
 ---
 
@@ -588,6 +588,8 @@ The investment is in the knowledge layer: specifications and tests that define s
 ---
 
 For the step-by-step methodology, see the [Method](method.md).
+
+For specification types, lifecycle states, and execution flows (including the bug-fix and discovery flows), see the [Core Model](stdd-core-model.md).
 
 For guidance on writing specifications, see [Writing Specifications](writing-specifications.md).
 

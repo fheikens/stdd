@@ -1,7 +1,8 @@
 # Feature: Specification Fingerprint
 
 Version: 1.0
-Status: accepted
+Type: behavioral
+Status: ACTIVE
 
 ## Description
 

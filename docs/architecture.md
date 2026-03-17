@@ -221,7 +221,7 @@ This is only possible because the boundaries are clean. If PricingEngine had dir
 
 # 5. Contract‑Based Interfaces
 
-Components interact through **contracts**: defined inputs, outputs, constraints, and failure conditions.
+Components interact through **contracts**: defined inputs, outputs, constraints, and failure conditions. In the [Core Model](stdd-core-model.md) taxonomy, these are **integration mappings** — a distinct specification type with its own test requirements and traceability.
 
 ## What a Contract Includes
 
@@ -500,10 +500,12 @@ Systems evolve as requirements change. In STDD, evolution follows a controlled p
 
 ## Removing a Feature
 
-1. Remove the specification
-2. Remove the tests
-3. Regenerate affected components (or remove dead code manually)
+1. Mark the specification as DEPRECATED (with a target removal date or condition)
+2. Remove the implementation and tests after the deprecation period
+3. Mark the specification as SUPERSEDED or remove it
 4. Verify remaining tests still pass
+
+See the [Core Model](stdd-core-model.md) artifact lifecycle for the full set of states and transition rules.
 
 In all cases, the Specification Fingerprint changes to reflect the evolution. The CI pipeline detects this and requires both specification and test updates in the same change.
 

@@ -650,4 +650,4 @@ Tests verify both.**
 
 ---
 
-For guidance on writing the specifications that declare technology and domain context, see [Writing Specifications](writing-specifications.md). For architectural patterns that support NFR compliance during regeneration, see [Architecture](architecture.md). For a worked example showing NFR activation in practice, see the [Seat Reservation API](../examples/seat-reservation.md).
+For guidance on writing the specifications that declare technology and domain context, see [Writing Specifications](writing-specifications.md). For the specification taxonomy and how NFRs relate to behavioral specifications and configuration decisions, see the [Core Model](stdd-core-model.md). For architectural patterns that support NFR compliance during regeneration, see [Architecture](architecture.md). For a worked example showing NFR activation in practice, see the [Seat Reservation API](../examples/seat-reservation.md).

@@ -62,6 +62,10 @@ The starting point is always the expected behavior of the system.
 
 ---
 
+> **Note:** The inline examples below use abbreviated metadata for readability. Full specifications must include complete metadata (including `Type`) as defined in the [Core Model](../docs/stdd-core-model.md).
+
+---
+
 # 3. Example 1: Shopping Cart Total
 
 ## Specification
@@ -69,7 +73,7 @@ The starting point is always the expected behavior of the system.
 ```
 Feature: Shopping Cart Total
 Version: 1.0
-Status: accepted
+Status: ACTIVE
 
 Description:
   The system must calculate the total price of items
@@ -146,7 +150,7 @@ If the code is regenerated later, the same tests still define the required behav
 ```
 Feature: User Login Validation
 Version: 1.0
-Status: accepted
+Status: ACTIVE
 
 Description:
   The system must validate a username and password combination.
@@ -215,7 +219,7 @@ As long as the tests remain valid, the behavior stays stable.
 ```
 Feature: Seat Reservation Hold
 Version: 1.0
-Status: accepted
+Status: ACTIVE
 
 Description:
   The system must place a temporary hold on a seat
@@ -313,7 +317,7 @@ The behavior is still defined before the implementation exists.
 ```
 Feature: Fraud Score Classification
 Version: 1.0
-Status: accepted
+Status: ACTIVE
 
 Description:
   The system must classify a transaction score

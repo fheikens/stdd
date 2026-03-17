@@ -96,7 +96,7 @@ System-level STDD becomes necessary when:
 
 # 3. Service Boundary Specifications
 
-Every service boundary needs a specification. Without one, the boundary is defined by the current implementation — which is the opposite of STDD.
+Every service boundary needs a specification. Without one, the boundary is defined by the current implementation — which is the opposite of STDD. In the [Core Model](stdd-core-model.md) taxonomy, service boundary specifications are **integration mappings** — they define how components connect rather than what the system must do.
 
 ## 3.1 What a Boundary Specification Contains
 

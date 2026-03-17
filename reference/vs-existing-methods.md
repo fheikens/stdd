@@ -502,4 +502,4 @@ This makes STDD particularly well suited for modern software development where A
 
 ---
 
-For the complete methodology, see the [Method](../docs/method.md). For the regeneration model in practice, see the [Seat Reservation API](../examples/seat-reservation.md). For common mistakes when adopting STDD, see [Anti-Patterns](anti-patterns.md). For step-by-step adoption guidance, see the [Adoption Guide](../docs/adoption-guide.md).
+For the complete methodology, see the [Method](../docs/method.md). For the specification taxonomy, test types, lifecycle model, and execution flows, see the [Core Model](../docs/stdd-core-model.md). For the regeneration model in practice, see the [Seat Reservation API](../examples/seat-reservation.md). For common mistakes when adopting STDD, see [Anti-Patterns](anti-patterns.md). For step-by-step adoption guidance, see the [Adoption Guide](../docs/adoption-guide.md).

@@ -116,7 +116,7 @@ The permanent layer above the code: specifications, tests, acceptance cases, inv
 
 # The Discipline
 
-Every change begins with a specification. Every specification ends with a passing test.
+Every behavioral change begins with a specification. Every specification ends with a passing test.
 
 ---
 

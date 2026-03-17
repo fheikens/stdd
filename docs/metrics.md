@@ -3,7 +3,7 @@
 ## Defining and Measuring Quality in Specification & Test-Driven Development
 
 Author: Frank Heikens
-Version: 1.0
+Version: 1.1
 Date: 2026
 
 ---
@@ -130,9 +130,23 @@ Each specification element has one of three states:
 
 | State | Definition |
 |-------|-----------|
-| **COVERED** | At least one test directly verifies this rule |
-| **PARTIALLY COVERED** | A test exercises the rule indirectly but does not assert the specific behavior |
+| **COVERED** | At least one requirement test or integration test directly verifies this rule by asserting the specific expected behavior |
+| **PARTIALLY COVERED** | A test exercises the rule indirectly — for example, a regression artifact (golden file, snapshot) detects output changes but does not assert the behavioral rule itself |
 | **UNCOVERED** | No test verifies this rule |
+
+## How Test Types Affect Coverage
+
+Different test types contribute differently to coverage. This distinction matters because a feature can appear well-tested while having low requirement coverage if most of its tests are regression artifacts.
+
+| Test Type | Coverage Contribution | Rationale |
+|---|---|---|
+| **Requirement test** | Supports COVERED status for behavioral specification rules | Directly asserts the specified behavior. If the rule is violated, the test fails with a specific assertion. |
+| **Integration test** | Supports COVERED status for contract rules (integration mappings) | Verifies that components honor the contract when they interact. Does not substitute for requirement tests on individual behavioral rules. |
+| **Regression artifact** | Supports PARTIALLY COVERED status only | Detects that output changed, but does not prove the output is correct. The baseline itself may contain errors. A specification rule verified only by a regression artifact needs a requirement test to reach COVERED. |
+
+A common pitfall: counting integration tests as requirement coverage for behavioral rules. An integration test that exercises a behavioral rule as a side effect does not directly verify it — the test would still pass if the rule were violated in a way that did not affect the integration outcome. Track requirement coverage and integration coverage separately. See the [Core Model](stdd-core-model.md), Section 6, for the full traceability rules.
+
+NFR tests that directly assert a specified constraint (e.g., decimal precision, injectable clock) are requirement tests — they verify a behavioral rule. NFRs are specification elements, not a separate test type.
 
 ## Calculating the Grade
 
@@ -428,6 +442,8 @@ Quality is not what the code looks like. Quality is what the specification deman
 ---
 
 For the STDD methodology, see the [Method](method.md).
+
+For specification types, test types, and traceability rules, see the [Core Model](stdd-core-model.md).
 
 For specification writing guidance, see [Writing Specifications](writing-specifications.md).
 
