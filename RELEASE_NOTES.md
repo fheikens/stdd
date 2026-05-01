@@ -1,3 +1,44 @@
+# STDD v0.4 — Behavioral / Structural ID Convention
+
+## What changed in v0.4
+
+STDD v0.4 sharpens the distinction between *behavioral* and *structural* artifacts in a specification, and aligns the default traceability tooling with that distinction. The motivation surfaced during v0.3.1 cleanup: the pre-existing default regex (`\w+-\d+`) silently dropped multi-segment spec IDs from traceability validation, hiding 9 invariant IDs and 9 failure-condition IDs across the three reference tools.
+
+### Spec ID convention
+
+- **Behavioral artifacts** — rules, invariants, failure conditions — keep prefixed multi-segment IDs (`PREFIX-NN`, `PREFIX-INV-NN`, `PREFIX-FAIL-NN`). These are testable claims; every one carries a row in the traceability matrix.
+- **Structural artifacts** — input and output field descriptors — no longer carry rule-style IDs at all. They are described by name, type, and constraints/description, matching the convention already used in `examples/order-cancellation/specification.md`. The template is updated to match (it had previously diverged with unprefixed `IN-1` / `OUT-1` IDs).
+
+### Validator
+
+- The default `--spec-pattern` is now `\w+(?:-\w+)*-\d+` (was `\w+-\d+`). This permits multi-segment IDs like `FP-INV-01` and `FP-FAIL-01` without requiring a custom pattern.
+- A new behavioral rule **TR-14** documents this matching guarantee.
+- Failure conditions and invariants now appear in Gate 1 reports.
+
+### Self-application
+
+- All 9 `*-FAIL-*` rows added to `features/traceability-matrix.md` with evidence blocks.
+- New test `test_missing_test_directory_warns_but_continues` covers the previously untested FP-FAIL-02.
+- Existing failure-condition tests (TR-FAIL-01..03, GEN-FAIL-01..03, FP-FAIL-03) extended to assert on the stderr channel each rule names.
+- Matrix moves from 49 → 59 spec IDs; COVERED 22 → 32; PARTIALLY COVERED unchanged at 27.
+
+## Compatibility note for adopters
+
+If your spec files use `PREFIX-IN-NN` or `PREFIX-OUT-NN` style IDs in Inputs / Outputs tables, the new default regex will now match them, and Gate 1 will demand tests for them. The recommended migration is one of:
+
+1. **Drop the ID column** from Inputs and Outputs (recommended — matches the order-cancellation example and the updated template).
+2. **Override the spec pattern** with a stricter regex (e.g. `--spec-pattern '\w+-(?:RULE|INV|FAIL)-\d+'`).
+
+Option 1 is the methodology-aligned path: input/output IDs were never testable behavioral claims; treating them as such was a mistake the regex used to hide.
+
+## License
+
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Author: Frank Heikens
+
+---
+
 # STDD v0.3 — Tightened Coverage Rules
 
 ## What changed in v0.3
