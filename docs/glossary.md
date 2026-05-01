@@ -1,7 +1,7 @@
 # STDD Glossary
 
 Author: Frank Heikens
-Version: 1.1
+Version: 1.2
 Date: 2026
 
 Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
@@ -36,6 +36,10 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 
 **Dependency Injection** --- The primary architectural pattern that makes STDD components testable and regenerable. Components receive their dependencies as constructor parameters rather than creating them internally, allowing tests to inject fakes or alternative implementations. See [Architecture](architecture.md), Section 6.
 
+**Divergence (Brownfield / Fork)** --- A change introduced by a downstream fork, port, or brownfield adoption relative to its upstream source. Every divergence must be classified as one of five types: compatibility-preserving (same observable behavior, requires test evidence), intentional breaking (different behavior by design), security hardening (deliberately stricter than upstream), migration risk (will require user action), or implementation-only (different internal structure but identical external behavior). Compatibility is never inferred from internal similarity — it requires test evidence at the surface the upstream contract names. See [Core Model](stdd-core-model.md), Section 6.6.
+
+**Evidence Block** --- A required artifact for every COVERED row in the traceability matrix. The block identifies the test file, test name, behavior verified (in the same vocabulary as the requirement), and surface verified (the exact externally observable channel the test exercises). A row marked COVERED without an evidence block is treated as PARTIALLY COVERED. The evidence block is the mechanism that prevents COVERED from being claimed on the basis of plausible reasoning, code inspection, or helper-level tests. See [Core Model](stdd-core-model.md), Section 6.4.
+
 **Execution Flow** --- A named sequence of steps for a specific development scenario. STDD defines four flows: New Feature (spec-first), Behavior Change (update spec first), Bug Fix where the spec is already correct (fix implementation, verify tests), and Discovery/Reverse Engineering (extract spec from reality). See [Core Model](stdd-core-model.md), Section 5.
 
 **Federated Fingerprint** --- A system-level specification fingerprint computed by hashing the individual fingerprints of all participating services. When any service's knowledge layer changes, the federated fingerprint changes, triggering system-level integration testing. See [System-Level STDD](system-level-stdd.md), Section 11.
@@ -53,6 +57,8 @@ Licensed under Creative Commons Attribution 4.0 (CC BY 4.0)
 **Lifecycle State** --- The current status of a specification artifact. STDD defines five states: DRAFT (under development), ACTIVE (accepted and authoritative), SUPERSEDED (replaced by a newer version), DEPRECATED (scheduled for removal), and REJECTED (evaluated and declined). Lifecycle transitions follow explicit rules; an ACTIVE specification must never be deleted without first being SUPERSEDED or DEPRECATED. See [Core Model](stdd-core-model.md), Section 4.
 
 **Knowledge Layer** --- The permanent layer above the code consisting of specifications, tests, acceptance cases, invariants, and contracts. The knowledge layer defines the system. Implementations are generated from it and verified against it. Its quality determines whether regeneration is safe. See [Manifesto](../manifesto.md), Terminology.
+
+**Multi-Channel Requirement** --- A behavioral requirement that constrains more than one externally observable surface (for example: redaction of a secure value across logs, stderr, stdout, argv, and TRACE output). Per Core Model Rule 8, a multi-channel requirement is COVERED only when each channel has direct test evidence; coverage of some channels but not others is PARTIALLY COVERED with the missing channels listed explicitly. See [Core Model](stdd-core-model.md), Section 6.1.
 
 **NFR (Non-Functional Requirement)** --- A quality constraint under which functional behavior must operate, such as performance, security, accessibility, or data integrity requirements. In STDD, NFRs follow the same discipline as functional requirements: they must be explicitly defined, attached to specifications, and verified through tests. See [NFR Framework](nfr-framework.md).
 
