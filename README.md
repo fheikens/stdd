@@ -134,6 +134,8 @@ This repository contains the STDD methodology documentation **and** applies STDD
 stdd/
 ├── README.md
 ├── manifesto.md
+├── RELEASE_NOTES.md
+├── requirements.txt
 ├── .fingerprint                     ← specification fingerprint
 │
 ├── features/                        ← STDD applied to its own tools
@@ -154,6 +156,7 @@ stdd/
 │   └── test_yaml_to_pytests.py
 │
 ├── tools/                           ← reference CSI scripts
+│   ├── README.md
 │   ├── compute_fingerprint.py
 │   ├── validate_traceability.py
 │   └── yaml_to_pytests.py
@@ -163,6 +166,7 @@ stdd/
 │   ├── stdd-core-model.md           ← v2 structural model
 │   ├── worked-example-core-model.md
 │   ├── stdd-v2-transition-notes.md
+│   ├── stdd-core-model-gap-review.md
 │   ├── method.md
 │   ├── writing-specifications.md
 │   ├── architecture.md
@@ -184,12 +188,14 @@ stdd/
 │   ├── seat-reservation.md
 │   ├── examples.md
 │   └── order-cancellation/          ← complete standalone feature
+│       ├── README.md
 │       ├── specification.md
 │       ├── acceptance-cases.yaml
 │       ├── traceability-matrix.md
 │       └── implementations/python/
 │
 ├── templates/                       ← copy-paste starters
+│   ├── README.md
 │   ├── specification.md
 │   ├── acceptance-cases.yaml
 │   ├── traceability-matrix.md
