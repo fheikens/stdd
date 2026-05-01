@@ -22,8 +22,9 @@ Date: 2026
 - [10. Mixing Architecture and Behavior](#10-mixing-architecture-and-behavior)
 - [11. Ignoring Regeneration](#11-ignoring-regeneration)
 - [12. Untraceable Specification‑to‑Test Mapping](#12-untraceable-specificationtotest-mapping)
-- [13. Unit Tests Without Integration Tests](#13-unit-tests-without-integration-tests)
-- [14. Conclusion](#14-conclusion)
+- [13. Overclaiming Coverage](#13-overclaiming-coverage)
+- [14. Unit Tests Without Integration Tests](#14-unit-tests-without-integration-tests)
+- [15. Conclusion](#15-conclusion)
 
 ---
 
@@ -272,7 +273,32 @@ For detailed strategies on closing this gap, see [Writing Specifications](../doc
 
 ---
 
-# 13. Unit Tests Without Integration Tests
+# 13. Overclaiming Coverage
+
+Coverage is the load-bearing signal in STDD. If a requirement says COVERED but no test actually verifies the behavior the requirement claims, the entire knowledge layer becomes a polite fiction. This section names the five most common ways traceability matrices end up overclaiming.
+
+These anti-patterns are particularly common when AI agents update traceability matrices, because AI agents can recognize that an implementation *appears* to satisfy a rule and from there infer coverage that no test actually proves. The defenses are the strict definitions in [Core Model](../docs/stdd-core-model.md), Section 6.4, and the AI-agent discipline in Section 6.5.
+
+**Traceability inflation.**
+Every row in the matrix says COVERED. Every requirement points at a test. The matrix looks complete. But many of the listed tests do not actually verify the requirement they are mapped to — they verify a nearby helper, an adjacent code path, or a different surface entirely. The matrix has been padded to look complete instead of populated with real evidence. The fix is the evidence block on every COVERED row (test file, test name, behavior verified, surface verified). A row that cannot fill in that block is not COVERED, regardless of how many test names are listed next to the spec ID.
+
+**Helper-level proof treated as system-level proof.**
+The requirement names a system-level surface: log output, stderr, on-disk file format, network message format, command-line behavior. The test exercises the helper that *feeds* that surface — a formatter, an encoder, a redactor — in isolation. The helper passes its unit test, so the requirement is marked COVERED. But the helper might be bypassed in some code paths, the system might add a second channel the helper never sees, or the integration that connects the helper to the surface might be wrong. A unit test of the helper proves the helper is correct; it does not prove the system as a whole exposes the claimed behavior. When the requirement names a system-level surface, the test must reach that surface. Otherwise the row is PARTIALLY COVERED.
+
+**Multi-channel requirement marked covered by single-channel test.**
+The requirement enumerates several channels — for example, "secure values must be redacted in logs, stderr, stdout, argv, and TRACE output." The test verifies redaction on one channel, typically the most convenient one. The matrix marks the requirement COVERED because the test passes. But each unverified channel is an independent failure mode, and the user-visible claim of the requirement is only as strong as its weakest channel. The fix is Rule 8 in the Core Model: every named channel must either have direct test evidence or be listed explicitly as NOT COVERED / FUTURE WORK.
+
+**Fork compatibility claimed without migration or corpus evidence.**
+A fork retains upstream's filenames, constants, function signatures, and helper structure. On inspection, the fork "looks compatible." The matrix marks compatibility-preserving rules COVERED. But none of the tests load an upstream-produced artifact and verify equivalent behavior under the fork. Compatibility cannot be inferred from internal similarity — only from observable behavior on real upstream inputs. A fork that retains the upstream config filename but parses it differently is not compatibility-preserving; it is a migration risk that looks compatibility-preserving on inspection. The Core Model classification (Section 6.6) and the Adoption Guide brownfield rules (Section 7) define what evidence is required.
+
+**Security guarantee claimed without channel-level test evidence.**
+A security requirement makes a strong, broad claim: "the system never leaks credentials," "all inputs are validated," "no secret is logged." The test exercises one validator, one redactor, or one channel. The requirement is marked COVERED because the test asserts the security property in the case it covers. But security guarantees are universal claims, and a single test demonstrates a single instance, not the universal. Security and backup/restore claims require integration or channel-level tests for every channel they name. A helper-level test is never enough on its own. The Core Model's COVERED definition (Section 6.4) makes this a hard rule.
+
+These five patterns share a common shape: a test exists, the test passes, the matrix records COVERED, and yet the system does not actually provide the guarantee the requirement claims. The defense is procedural — the strict definitions, the evidence block, and Rule 9 (when in doubt, downgrade) applied uniformly to every row.
+
+---
+
+# 14. Unit Tests Without Integration Tests
 
 Every function passes its unit tests. The system still fails.
 
@@ -301,7 +327,7 @@ For the full specification pyramid model, see the [Method](../docs/method.md), S
 
 ---
 
-# 14. Conclusion
+# 15. Conclusion
 
 STDD works best when its principles are followed consistently.
 

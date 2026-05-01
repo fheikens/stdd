@@ -22,6 +22,7 @@ Date: 2026
 - [10. Specification Readiness Checklist](#10-specification-readiness-checklist)
 - [11. Worked Examples](#11-worked-examples)
 - [12. Conclusion](#12-conclusion)
+- [13. AI-Agent Coverage Discipline](#13-ai-agent-coverage-discipline)
 
 ---
 
@@ -574,7 +575,15 @@ The test represents the specification. If the AI's output disagrees with the tes
 
 If a test seems wrong, review the specification. If the specification is correct, the test is correct. Fix the prompt or decompose the function. Never weaken the test.
 
-## 8.6 Over-Specifying the Implementation
+## 8.6 Promoting Coverage Without Test Evidence
+
+When AI is asked to update a traceability matrix or assess coverage, a common failure mode is to mark a requirement COVERED on the strength of plausible reasoning — "the implementation does X, therefore X is covered" — or on the strength of a helper-level test that does not exercise the surface the requirement names.
+
+This is not coverage. It is inference dressed up as evidence. Section 13 of this document and Section 6.5 of the [Core Model](stdd-core-model.md) define the discipline AI agents must apply when reasoning about coverage. The short form: a COVERED claim must point to a specific test that asserts the specific behavior, on the specific surface, that the requirement names. If any part is missing, the requirement is PARTIALLY COVERED or UNCOVERED.
+
+This anti-pattern is dangerous precisely because the matrix looks complete. The defense is procedural, not conversational: require an evidence block on every COVERED row, and refuse to promote without one.
+
+## 8.7 Over-Specifying the Implementation
 
 ```
 Create a class named ShippingCalculator with a private method
@@ -782,6 +791,38 @@ The skills in this document reduce generation attempts by eliminating the ambigu
 These are specification skills, not AI skills. They make specifications better for human readers too. A specification that AI can implement on the first attempt is a specification that any developer can understand without asking questions.
 
 The quality of the prompt follows from the quality of the specification. Invest in the specification, and the prompt takes care of itself.
+
+---
+
+# 13. AI-Agent Coverage Discipline
+
+This section is written for AI agents (Claude, Codex, and equivalents) operating on STDD artifacts. It restates the binding rules from [Core Model](stdd-core-model.md), Section 6.5, in directive form so they can be quoted or linked into an agent prompt.
+
+**An AI agent must not promote coverage status based on plausible reasoning, implementation inspection, or helper-level tests.**
+
+For every requirement an AI agent marks or accepts as COVERED, the agent must explicitly identify:
+
+1. The exact observable behavior the requirement claims.
+2. The exact test that proves it (file path and test name).
+3. The exact surface that test exercises.
+4. The surfaces named by the requirement that are not covered by that test, if any.
+
+If item 4 is non-empty, the requirement is **not** COVERED. It is PARTIALLY COVERED, with the missing surfaces listed explicitly under "Evidence not yet verified," or UNCOVERED if the existing evidence does not match the claim at all.
+
+**Specifically forbidden:**
+
+- Marking a requirement COVERED because the implementation appears to satisfy it.
+- Marking a requirement COVERED because a helper, parser, or formatter the implementation calls has its own unit test.
+- Marking a multi-channel requirement (log, stderr, stdout, argv, files, network, TLS, backup/restore, environment, command-line) COVERED on the strength of a test against one channel.
+- Marking a security, backup, or restore claim COVERED without at least one integration or channel-level test.
+- Marking compatibility with an upstream system COVERED because constants, filenames, or function signatures are unchanged.
+- Inferring coverage from the presence of similar tests for adjacent requirements.
+
+**Required output when updating a traceability matrix:** every COVERED row must include the evidence block defined in [Templates › Traceability Matrix](../templates/traceability-matrix.md) — test file, test name, behavior verified, surface verified, and any "Evidence not yet verified" entries. A row without that block is not a COVERED row.
+
+**When uncertain, downgrade.** Rule 9 in the Core Model is the default. If the evidence might cover the claim but the agent cannot demonstrate that it does, the row is PARTIALLY COVERED. The cost of an honest PARTIALLY COVERED is a known gap that gets closed; the cost of a false COVERED is a guarantee the system does not provide.
+
+For the categorical definitions and the multi-channel rule, see [Core Model](stdd-core-model.md), Sections 6.4 and 6.1 (Rule 8). For the brownfield/fork-specific application of these rules, see Section 6.6 of the Core Model and Section 7 of the [Adoption Guide](adoption-guide.md).
 
 ---
 

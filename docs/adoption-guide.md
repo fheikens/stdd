@@ -17,6 +17,7 @@ Date: 2026
 - [5. Migration Example: Shipping Cost Calculator](#5-migration-example-shipping-cost-calculator)
 - [6. Adoption Timeline](#6-adoption-timeline)
 - [7. Migrating Existing Features](#7-migrating-existing-features)
+  - [Forks and Divergence from Upstream](#forks-and-divergence-from-upstream)
 - [8. Introducing the CI Pipeline](#8-introducing-the-ci-pipeline)
 - [9. Team Transition](#9-team-transition)
 - [10. Common Objections](#10-common-objections)
@@ -375,6 +376,33 @@ Do not migrate features that are stable and not being changed. That is unnecessa
 At this point, the feature is under STDD control. Future behavioral changes start with a specification update. Bug fixes where the specification already defines the correct behavior can proceed directly — see the [Core Model](stdd-core-model.md) execution flows.
 
 This migration process corresponds to the **Discovery and Reverse Engineering** execution flow defined in the [Core Model](stdd-core-model.md), Section 5.4. For architectural guidance on handling tightly coupled components, global state, and other brownfield challenges, see [Architecture](architecture.md), Section 10.
+
+## Forks and Divergence from Upstream
+
+Forks deserve special attention. A fork inherits an entire body of behavior from upstream, and any divergence — intentional or accidental — is a place where compatibility claims can drift away from reality. STDD applies a stricter rule for forks: every behavior changed from upstream is classified, and compatibility is never inferred from internal structure.
+
+For each behavioral rule in the fork's specification, classify it as one of the categories defined in [Core Model](stdd-core-model.md), Section 6.6:
+
+- **Compatibility-preserving** — produces the same observable result as upstream.
+- **Intentional breaking change** — diverges deliberately, with a documented reason.
+- **Security hardening** — diverges to close a vulnerability or tighten a guarantee.
+- **Migration risk** — diverges in a way that may require existing users to migrate data, configuration, or workflow.
+- **Implementation-only change** — internals changed; no externally observable behavior changed.
+
+Record the classification in the specification metadata for each affected rule. The classification is part of the specification, not a side note.
+
+**Compatibility-preserving status requires test evidence.** A rule classified compatibility-preserving must be backed by at least one test that proves the equivalence — typically by loading an upstream-produced artifact (configuration file, data file, backup, on-disk format, message format) and asserting the fork produces the same observable outcome. Without that test, downgrade to migration risk and document what would need to change for users.
+
+**What does not count as compatibility evidence:**
+
+- Unchanged constants, type names, filenames, or function signatures.
+- An implementation that "looks the same" as upstream.
+- A unit test of an internal helper that has the same name as upstream's helper.
+- Helper-level tests that exercise a parser, decoder, or formatter in isolation when the requirement is about the externally observable round-trip.
+
+These are inspection artifacts, not test evidence. The Core Model coverage rules (Section 6.4) apply: a compatibility-preserving rule that names an externally observable surface needs a test against that surface, and an unverified channel keeps the row at PARTIALLY COVERED.
+
+This applies symmetrically to security hardening claims. A security hardening rule that names redaction across logs, stderr, stdout, argv, and trace output is COVERED only when each of those channels has direct test evidence. A test against one channel makes the rule PARTIALLY COVERED with the others listed as NOT COVERED / FUTURE WORK.
 
 ---
 
