@@ -36,6 +36,8 @@ Date: 2026
   - [6.2 Traceability Matrix Structure](#62-traceability-matrix-structure)
   - [6.3 Lifecycle Visibility](#63-lifecycle-visibility)
   - [6.4 Coverage Categories](#64-coverage-categories)
+  - [6.5 AI-Agent Coverage Discipline](#65-ai-agent-coverage-discipline)
+  - [6.6 Brownfield and Fork Compatibility](#66-brownfield-and-fork-compatibility)
 - [7. Metadata Convention](#7-metadata-convention)
   - [7.1 Specification Metadata](#71-specification-metadata)
   - [7.2 Examples](#72-examples)
@@ -428,8 +430,8 @@ Traceability connects specifications to tests and makes coverage visible. These 
 **Rule 0: Specification IDs must be scoped to the feature.**
 Use a feature prefix (e.g., `PRICE-01`, `ORD-CANCEL-03`), not generic names like `RULE-1`. This prevents collisions when multiple features share a traceability matrix or are validated by the same tooling.
 
-**Rule 1: Every behavioral specification rule must map to at least one requirement test.**
-This is the fundamental traceability rule. A behavioral rule without a test is an unverified claim. The traceability matrix must show the link.
+**Rule 1: Every behavioral specification rule must map to at least one requirement test that verifies the observable behavior the rule claims.**
+This is the fundamental traceability rule. A behavioral rule without a test is an unverified claim. A behavioral rule with a test that exercises only an internal helper, parser, or isolated function is also an unverified claim — the test must verify the same surface the requirement names. The traceability matrix must show the link, and the link must be a behavioral one, not an incidental one.
 
 **Rule 2: Every contract in an integration mapping must map to at least one integration test.**
 Contracts are verified separately from behavioral rules. Integration tests verify that real components honor the contract when they interact.
@@ -448,6 +450,12 @@ The traceability matrix must allow independent assessment of: (a) how many behav
 
 **Rule 7: Configuration decisions with testable implications should appear in the traceability matrix with spec type `configuration`.**
 Configuration decisions without testable implications are tracked via their metadata header and version history and do not require traceability matrix entries.
+
+**Rule 8: Multi-channel requirements must show evidence for every named channel.**
+When a requirement names more than one externally observable channel — for example, log output, stderr, stdout, command-line parsing, environment variables, subprocess argv, files on disk, network or TLS behavior, or backup/restore compatibility — every named channel must either have direct test evidence or be listed explicitly as NOT COVERED / FUTURE WORK. A test that verifies one channel does not establish coverage for the others. A test that exercises one secure option, one config key, one log level, one protocol path, or one platform does not establish coverage for the rest unless the requirement is scoped to only that case.
+
+**Rule 9: When in doubt about coverage, downgrade.**
+The classifications in §6.4 are conservative by design. If it is unclear whether the test evidence covers the full claim of the requirement, downgrade: COVERED becomes PARTIALLY COVERED, PARTIALLY COVERED becomes UNCOVERED. Coverage status must never be inferred from implementation structure, plausible reasoning, or the existence of helper-level tests; it must follow from explicit test evidence against the surface the requirement names. See §6.5 for the AI-agent application of this rule.
 
 ## 6.2 Traceability Matrix Structure
 
@@ -493,6 +501,83 @@ STDD distinguishes three categories of coverage, each measured independently:
 **Regression coverage:** The count of features with regression artifacts. This is informational — regression artifacts do not contribute to requirement or integration coverage.
 
 These three categories correspond to the three test types. Reporting them separately prevents a common failure mode: a feature that appears well-tested because it has many regression artifacts but has low requirement coverage because the behavioral rules are not individually verified.
+
+### Coverage Status Definitions
+
+The Coverage column takes one of three values. The definitions below are strict and apply uniformly across requirement, integration, and regression rows.
+
+**COVERED.** A requirement is COVERED only when at least one test verifies the same observable behavior the requirement claims, on the same surface the requirement names. If the requirement names a user-visible or external surface — log output, stderr, stdout, command-line parsing, environment variables, subprocess argv, files on disk, network/TLS behavior, backup/restore compatibility, or any other externally observable channel — then a test against an internal helper, parser, or isolated function is **not sufficient**. The behavioral surface verified by the test must match the behavioral surface stated by the requirement.
+
+For backup, restore, and security claims, COVERED additionally requires at least one integration or channel-level test. Helper-level tests are never enough on their own for these categories.
+
+**PARTIALLY COVERED.** A requirement is PARTIALLY COVERED when:
+
+- the existing test verifies only an internal helper, parser, or isolated function while the requirement names an external surface; or
+- the requirement names multiple channels and only some channels have direct test evidence; or
+- the test exercises only one secure option, one config key, one log level, one protocol path, or one platform while the requirement is broader; or
+- the only evidence is a regression artifact (Rule 3).
+
+PARTIALLY COVERED is a real status, not a euphemism. Use it.
+
+**UNCOVERED.** No test verifies the behavior the requirement claims. The requirement is an unverified claim. UNCOVERED is also the correct status when the only available evidence comes from inspecting the implementation rather than running a test that asserts the behavior.
+
+### Evidence Requirements for COVERED Rows
+
+Every COVERED row in the traceability matrix must, on the row itself or in an evidence block beneath it, identify:
+
+- **Test file** — the file path of the test.
+- **Test name** — the specific test function or test case.
+- **Behavior verified** — a one-sentence statement of what the test asserts, in the same vocabulary as the requirement.
+- **Surface verified** — the exact externally observable surface the test exercises (e.g., "stderr of the CLI process", "the bytes written to the backup file", "log output at TRACE level").
+
+If any element of the requirement's claim is not represented in this evidence, the row is PARTIALLY COVERED, not COVERED. List the missing channels explicitly under "Evidence not yet verified" or as a NOT COVERED / FUTURE WORK note.
+
+A worked example of this evidence-rich form appears in [Templates › Traceability Matrix](../templates/traceability-matrix.md).
+
+## 6.5 AI-Agent Coverage Discipline
+
+AI agents (Claude, Codex, and equivalents) using STDD to assess or update a traceability matrix are bound by the same rules as human authors, but with one additional constraint: an AI agent must not promote a requirement to COVERED based on plausible reasoning, code inspection, or helper-level tests. AI agents are particularly prone to this failure mode because they can recognize that an implementation *appears* to satisfy a rule and from there infer coverage that no test actually proves.
+
+**For every COVERED claim an AI agent makes or accepts, the agent must explicitly identify:**
+
+1. The exact observable behavior the requirement claims.
+2. The exact test that proves it (file path and test name).
+3. The exact surface that test exercises.
+4. The surfaces named by the requirement that are **not** covered by that test, if any.
+
+If item 4 is non-empty, the requirement must remain PARTIALLY COVERED or UNCOVERED. The agent must not promote on the strength of items 1–3 alone when item 4 lists ungaranteed surfaces. The agent must apply Rule 9 (downgrade when in doubt) by default.
+
+AI agents must not:
+
+- Promote coverage based on the structure of the implementation.
+- Promote coverage based on the existence of similar tests for adjacent requirements.
+- Promote coverage based on a helper-level test when the requirement names a system-level or user-visible surface.
+- Mark a multi-channel requirement COVERED on the strength of a single-channel test.
+- Mark a security, backup, or restore claim COVERED without a channel-level or integration test.
+
+When generating or revising a traceability matrix, an AI agent must produce the evidence block defined above (test file, test name, behavior verified, surface verified) for every COVERED row, and must list missing surfaces explicitly. A row without that evidence block is not a COVERED row.
+
+## 6.6 Brownfield and Fork Compatibility
+
+When STDD is applied to a fork or to a brownfield system that diverged from an upstream project, every behavior changed from upstream must be classified as exactly one of:
+
+- **Compatibility-preserving** — the behavior produces the same observable result as upstream for the same inputs.
+- **Intentional breaking change** — the behavior diverges deliberately, with a documented reason.
+- **Security hardening** — the behavior diverges to close a vulnerability or tighten a guarantee.
+- **Migration risk** — the behavior diverges in a way that may require existing users to migrate data, configuration, or workflow.
+- **Implementation-only change** — internals changed; no externally observable behavior changed.
+
+This classification is part of the specification's metadata for the affected rule, not a separate document.
+
+**Compatibility may only be claimed COVERED when tests prove one of:**
+
+- existing upstream data files (or a representative corpus of them) load and behave unchanged under the fork; or
+- existing upstream configuration produces equivalent observable behavior under the fork; or
+- the divergence is explicitly documented as intentional, with the affected rules classified accordingly.
+
+Compatibility must not be inferred from unchanged constants, unchanged filenames, unchanged helper signatures, or unchanged internal structure. None of those are observable behavior. A fork that retains the upstream filename for its config file but changes how the file is parsed is not compatibility-preserving — it is a migration risk that looks compatibility-preserving on inspection. Only test evidence against the upstream-observable surface establishes compatibility.
+
+For the brownfield migration workflow that produces these classifications, see [Adoption Guide](adoption-guide.md), Section 7. For the discovery flow this builds on, see Section 5.4.
 
 ---
 
