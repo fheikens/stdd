@@ -11,18 +11,18 @@ Status: DRAFT
 
 ## Inputs
 
-| ID | Name | Type | Constraints |
-|----|------|------|-------------|
-| IN-1 | [input_name] | [string / integer / decimal / list / object] | [required, max length, allowed values, etc.] |
-| IN-2 | [input_name] | [type] | [constraints] |
-| IN-3 | [input_name] | [type] | [constraints] |
+| Name | Type | Constraints |
+|------|------|-------------|
+| [input_name] | [string / integer / decimal / list / object] | [required, max length, allowed values, etc.] |
+| [input_name] | [type] | [constraints] |
+| [input_name] | [type] | [constraints] |
 
 ## Outputs
 
-| ID | Name | Type |
-|----|------|------|
-| OUT-1 | [output_name] | [type] |
-| OUT-2 | [output_name] | [type] |
+| Name | Type | Description |
+|------|------|-------------|
+| [output_name] | [type] | [description] |
+| [output_name] | [type] | [description] |
 
 ## Behavioral Scenarios
 

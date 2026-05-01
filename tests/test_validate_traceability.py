@@ -150,7 +150,7 @@ def test_all_specs_covered_exits_0(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_untested_spec_exits_1(tmp_path):
-    """TR-08: Exit code 1 when any spec ID has no test reference."""
+    """TR-08 / TR-FAIL-03: Exit code 1, missing IDs in stdout, FAILED to stderr."""
     spec_dir = _make_spec_dir(tmp_path, "specs", "| FEAT-01 | tested |\n| FEAT-02 | untested |")
     test_dir = _make_test_dir(tmp_path, "tests", {
         "test_partial.py": "# FEAT-01 only",
@@ -163,6 +163,7 @@ def test_untested_spec_exits_1(tmp_path):
 
     assert result.returncode == 1
     assert "FEAT-02" in result.stdout
+    assert "FAILED" in result.stderr
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +171,7 @@ def test_untested_spec_exits_1(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_nonexistent_spec_dir_exits_1(tmp_path):
-    """TR-09: Exit code 1 if spec_dir does not exist."""
+    """TR-09 / TR-FAIL-01: Exit code 1 and error to stderr if spec_dir does not exist."""
     test_dir = _make_test_dir(tmp_path, "tests", {"test.py": "pass"})
 
     result = subprocess.run(
@@ -179,6 +180,8 @@ def test_nonexistent_spec_dir_exits_1(tmp_path):
     )
 
     assert result.returncode == 1
+    assert "Error" in result.stderr
+    assert "spec directory" in result.stderr
 
 
 # ---------------------------------------------------------------------------
@@ -186,7 +189,7 @@ def test_nonexistent_spec_dir_exits_1(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_nonexistent_test_dir_exits_1(tmp_path):
-    """TR-10: Exit code 1 if test_dir does not exist."""
+    """TR-10 / TR-FAIL-02: Exit code 1 and error to stderr if test_dir does not exist."""
     spec_dir = _make_spec_dir(tmp_path, "specs", "| FEAT-01 | Rule |")
 
     result = subprocess.run(
@@ -195,6 +198,8 @@ def test_nonexistent_test_dir_exits_1(tmp_path):
     )
 
     assert result.returncode == 1
+    assert "Error" in result.stderr
+    assert "test directory" in result.stderr
 
 
 # ---------------------------------------------------------------------------
@@ -241,6 +246,33 @@ def test_custom_spec_pattern(tmp_path):
     )
 
     assert result.returncode == 0
+
+
+# ---------------------------------------------------------------------------
+# TR-14: Default pattern matches multi-segment spec IDs
+# ---------------------------------------------------------------------------
+
+def test_default_pattern_matches_multi_segment_ids(tmp_path):
+    """TR-14: The default pattern detects multi-segment IDs like FP-INV-01 and FP-FAIL-01."""
+    spec_dir = _make_spec_dir(
+        tmp_path,
+        "specs",
+        "| FP-INV-01 | invariant rule |\n| FP-FAIL-01 | failure condition |\n| FP-01 | scalar rule |",
+    )
+    test_dir = _make_test_dir(tmp_path, "tests", {
+        "test_feature.py": "# FP-INV-01\n# FP-FAIL-01\n# FP-01",
+    })
+
+    result = subprocess.run(
+        [sys.executable, TOOL, "--spec-dir", spec_dir, "--test-dir", test_dir],
+        capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0
+    assert "FP-INV-01" in result.stdout
+    assert "FP-FAIL-01" in result.stdout
+    assert "FP-01" in result.stdout
+    assert "Specifications found: 3" in result.stdout
 
 
 # ---------------------------------------------------------------------------

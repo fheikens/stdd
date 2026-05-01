@@ -10,21 +10,21 @@ Computes a SHA-256 hash of all specification and test files in an STDD project. 
 
 ## Inputs
 
-| ID | Name | Type | Constraints |
-|----|------|------|-------------|
-| FP-IN-01 | spec_dir | string | Required. Path to the specification directory. |
-| FP-IN-02 | test_dir | string | Required. Path to the test directory. |
-| FP-IN-03 | nfr_file | string | Optional. Path to a non-functional requirements file. |
-| FP-IN-04 | --compare | flag | Optional. Compare computed hash against stored .fingerprint. |
-| FP-IN-05 | --update | flag | Optional. Write computed hash to .fingerprint file. |
+| Name | Type | Constraints |
+|------|------|-------------|
+| spec_dir | string | Required. Path to the specification directory. |
+| test_dir | string | Required. Path to the test directory. |
+| nfr_file | string | Optional. Path to a non-functional requirements file. |
+| --compare | flag | Optional. Compare computed hash against stored .fingerprint. |
+| --update | flag | Optional. Write computed hash to .fingerprint file. |
 
 ## Outputs
 
-| ID | Name | Type |
-|----|------|------|
-| FP-OUT-01 | fingerprint | string | SHA-256 hex digest, 64 characters, printed to stdout. |
-| FP-OUT-02 | exit_code | integer | 0 on success or first run; 1 on mismatch. |
-| FP-OUT-03 | .fingerprint | file | Created/updated when --update is used. Contains hash + newline. |
+| Name | Type | Description |
+|------|------|-------------|
+| fingerprint | string | SHA-256 hex digest, 64 characters, printed to stdout. |
+| exit_code | integer | 0 on success or first run; 1 on mismatch. |
+| .fingerprint | file | Created/updated when --update is used. Contains hash + newline. |
 
 ## Behavioral Scenarios
 

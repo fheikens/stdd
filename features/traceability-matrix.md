@@ -31,6 +31,9 @@ All specifications are `behavioral` and `ACTIVE`. All tests are `requirement` te
 | FP-INV-01 | behavioral | ACTIVE | test_deterministic_hash | requirement | COVERED |
 | FP-INV-02 | behavioral | ACTIVE | test_content_change_produces_different_hash | requirement | COVERED |
 | FP-INV-03 | behavioral | ACTIVE | test_files_processed_in_sorted_order | requirement | PARTIALLY COVERED |
+| FP-FAIL-01 | behavioral | ACTIVE | test_missing_directory_warns_but_continues | requirement | COVERED |
+| FP-FAIL-02 | behavioral | ACTIVE | test_missing_test_directory_warns_but_continues | requirement | COVERED |
+| FP-FAIL-03 | behavioral | ACTIVE | test_compare_detects_mismatch | requirement | COVERED |
 
 ### Evidence (COVERED rows)
 
@@ -76,6 +79,24 @@ All specifications are `behavioral` and `ACTIVE`. All tests are `requirement` te
 - behavior verified: rewriting the spec file content between two `compute_fingerprint` calls yields different hash values.
 - surface verified: function return value (the hash string).
 
+**FP-FAIL-01** — missing spec_dir produces stderr warning and hashing continues.
+- test file: `tests/test_compute_fingerprint.py`
+- test name: `test_missing_directory_warns_but_continues`
+- behavior verified: passing a nonexistent spec_dir returns a 64-char hex digest (no exception) and writes "Warning" to stderr.
+- surface verified: function return value and `sys.stderr` (captured via `capsys`).
+
+**FP-FAIL-02** — missing test_dir produces stderr warning and hashing continues.
+- test file: `tests/test_compute_fingerprint.py`
+- test name: `test_missing_test_directory_warns_but_continues`
+- behavior verified: passing a nonexistent test_dir returns a 64-char hex digest (no exception) and writes "Warning" to stderr.
+- surface verified: function return value and `sys.stderr` (captured via `capsys`).
+
+**FP-FAIL-03** — `.fingerprint` mismatch in --compare mode prints stored and current hashes to stderr with exit 1.
+- test file: `tests/test_compute_fingerprint.py`
+- test name: `test_compare_detects_mismatch`
+- behavior verified: subprocess invocation with `--compare` against a wrong stored hash exits 1, writes "MISMATCH" to stderr, includes the literal stored hash, and labels the current hash with "Current:".
+- surface verified: CLI process exit code and stderr.
+
 ### Coverage gaps (PARTIALLY COVERED rows)
 
 - **FP-01 / FP-02** — the test only confirms that a 64-char hex digest is returned. It does not exercise recursive directory traversal or the build-artifact exclusion (`__pycache__`, `.pyc`, `.pytest_cache`) that the rule explicitly names.
@@ -107,6 +128,10 @@ All specifications are `behavioral` and `ACTIVE`. All tests are `requirement` te
 | TR-INV-01 | behavioral | ACTIVE | test_every_spec_id_appears_in_report | requirement | COVERED |
 | TR-INV-02 | behavioral | ACTIVE | test_exit_0_implies_zero_missing | requirement | COVERED |
 | TR-INV-03 | behavioral | ACTIVE | test_exit_1_implies_nonzero_missing | requirement | COVERED |
+| TR-14 | behavioral | ACTIVE | test_default_pattern_matches_multi_segment_ids | requirement | COVERED |
+| TR-FAIL-01 | behavioral | ACTIVE | test_nonexistent_spec_dir_exits_1 | requirement | COVERED |
+| TR-FAIL-02 | behavioral | ACTIVE | test_nonexistent_test_dir_exits_1 | requirement | COVERED |
+| TR-FAIL-03 | behavioral | ACTIVE | test_untested_spec_exits_1 | requirement | COVERED |
 
 ### Evidence (COVERED rows)
 
@@ -170,6 +195,30 @@ All specifications are `behavioral` and `ACTIVE`. All tests are `requirement` te
 - behavior verified: subprocess invocation that exits 1 also produces stdout containing "Missing tests:        1".
 - surface verified: CLI process exit code and stdout, asserted jointly.
 
+**TR-14** — default pattern matches multi-segment spec IDs.
+- test file: `tests/test_validate_traceability.py`
+- test name: `test_default_pattern_matches_multi_segment_ids`
+- behavior verified: subprocess invocation with the default pattern detects `FP-INV-01`, `FP-FAIL-01`, and `FP-01` simultaneously (all three appear in the report and "Specifications found: 3" is printed).
+- surface verified: CLI process exit code and stdout.
+
+**TR-FAIL-01** — missing spec_dir produces stderr error and exit 1.
+- test file: `tests/test_validate_traceability.py`
+- test name: `test_nonexistent_spec_dir_exits_1`
+- behavior verified: subprocess invocation with a missing `--spec-dir` exits 1 and writes "Error" + "spec directory" to stderr.
+- surface verified: CLI process exit code and stderr.
+
+**TR-FAIL-02** — missing test_dir produces stderr error and exit 1.
+- test file: `tests/test_validate_traceability.py`
+- test name: `test_nonexistent_test_dir_exits_1`
+- behavior verified: subprocess invocation with a missing `--test-dir` exits 1 and writes "Error" + "test directory" to stderr.
+- surface verified: CLI process exit code and stderr.
+
+**TR-FAIL-03** — untested specs cause stdout listing, FAILED to stderr, exit 1.
+- test file: `tests/test_validate_traceability.py`
+- test name: `test_untested_spec_exits_1`
+- behavior verified: subprocess invocation exits 1, writes the missing spec ID to stdout, and writes "FAILED" to stderr.
+- surface verified: CLI process exit code, stdout, and stderr.
+
 ### Coverage gaps (PARTIALLY COVERED rows)
 
 - **TR-01** — the test puts a single file at the top of one directory. It does not exercise recursion into subdirectories, which is part of the rule.
@@ -199,6 +248,9 @@ All specifications are `behavioral` and `ACTIVE`. All tests are `requirement` te
 | GEN-INV-01 | behavioral | ACTIVE | test_function_count_equals_case_count | requirement | PARTIALLY COVERED |
 | GEN-INV-02 | behavioral | ACTIVE | test_every_test_references_spec_id | requirement | PARTIALLY COVERED |
 | GEN-INV-03 | behavioral | ACTIVE | test_generated_code_parses + test_generated_code_with_function_parses | requirement | COVERED |
+| GEN-FAIL-01 | behavioral | ACTIVE | test_file_not_found_exits_1 | requirement | COVERED |
+| GEN-FAIL-02 | behavioral | ACTIVE | test_invalid_yaml_structure_exits_1 | requirement | COVERED |
+| GEN-FAIL-03 | behavioral | ACTIVE | test_missing_key_exits_1 | requirement | COVERED |
 
 ### Evidence (COVERED rows)
 
@@ -226,6 +278,24 @@ All specifications are `behavioral` and `ACTIVE`. All tests are `requirement` te
 - behavior verified: `ast.parse` succeeds on the output of `generate_module(...)` for both default and `--module/--function` modes.
 - surface verified: return value of `generate_module` (the generated source text), which is the artefact the rule constrains.
 
+**GEN-FAIL-01** — missing YAML file produces stderr error and exit 1.
+- test file: `tests/test_yaml_to_pytests.py`
+- test name: `test_file_not_found_exits_1`
+- behavior verified: subprocess invocation with a nonexistent path exits 1 and writes "not found" or "error" to stderr.
+- surface verified: CLI process exit code and stderr.
+
+**GEN-FAIL-02** — non-mapping YAML produces stderr error and exit 1.
+- test file: `tests/test_yaml_to_pytests.py`
+- test name: `test_invalid_yaml_structure_exits_1`
+- behavior verified: subprocess invocation against a top-level YAML list exits 1 and writes "Error" to stderr.
+- surface verified: CLI process exit code and stderr.
+
+**GEN-FAIL-03** — missing acceptance_cases key produces stderr error and exit 1.
+- test file: `tests/test_yaml_to_pytests.py`
+- test name: `test_missing_key_exits_1`
+- behavior verified: subprocess invocation against a YAML mapping without the expected key exits 1 and writes "Error" to stderr.
+- surface verified: CLI process exit code and stderr.
+
 ### Coverage gaps (PARTIALLY COVERED rows)
 
 - **GEN-01** — calls `generate_module` directly. The rule names two output formats (Python and Go); only the Python path is exercised here. (The Go path is touched by GEN-09, but also helper-only.)
@@ -243,10 +313,10 @@ All specifications are `behavioral` and `ACTIVE`. All tests are `requirement` te
 
 | Tool | Specifications | COVERED | PARTIALLY COVERED | UNCOVERED |
 |---|---|---|---|---|
-| compute_fingerprint.py | 16 | 8 | 8 | 0 |
-| validate_traceability.py | 16 | 10 | 6 | 0 |
-| yaml_to_pytests.py | 17 | 4 | 13 | 0 |
-| **Total** | **49** | **22** | **27** | **0** |
+| compute_fingerprint.py | 19 | 11 | 8 | 0 |
+| validate_traceability.py | 20 | 14 | 6 | 0 |
+| yaml_to_pytests.py | 20 | 7 | 13 | 0 |
+| **Total** | **59** | **32** | **27** | **0** |
 
 Every specification ID has at least one test (Gate 1 passes — see CI). The
 COVERED rows are those whose test exercises the CLI surface (subprocess

@@ -254,7 +254,7 @@ def test_accepts_hyphen_key(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_file_not_found_exits_1():
-    """GEN-12: Exit code 1 if the YAML file does not exist."""
+    """GEN-12 / GEN-FAIL-01: Exit code 1 and error to stderr if the YAML file does not exist."""
     result = subprocess.run(
         [sys.executable, TOOL, "/nonexistent/path/cases.yaml"],
         capture_output=True, text=True,
@@ -269,7 +269,7 @@ def test_file_not_found_exits_1():
 # ---------------------------------------------------------------------------
 
 def test_invalid_yaml_structure_exits_1(tmp_path):
-    """GEN-13: Exit code 1 if YAML is not a mapping or lacks expected key."""
+    """GEN-13 / GEN-FAIL-02: Exit code 1 and error to stderr if YAML is not a mapping."""
     yaml_path = _write_yaml(tmp_path, "- just a list\n- no mapping")
 
     result = subprocess.run(
@@ -278,10 +278,11 @@ def test_invalid_yaml_structure_exits_1(tmp_path):
     )
 
     assert result.returncode == 1
+    assert "Error" in result.stderr
 
 
 def test_missing_key_exits_1(tmp_path):
-    """GEN-13: Exit code 1 if YAML mapping lacks the expected key."""
+    """GEN-13 / GEN-FAIL-03: Exit code 1 and error to stderr if YAML lacks the expected key."""
     yaml_path = _write_yaml(tmp_path, "wrong_key:\n  - name: test")
 
     result = subprocess.run(
@@ -290,6 +291,7 @@ def test_missing_key_exits_1(tmp_path):
     )
 
     assert result.returncode == 1
+    assert "Error" in result.stderr
 
 
 # ---------------------------------------------------------------------------

@@ -10,20 +10,20 @@ Generates test skeletons from an STDD acceptance-cases.yaml file. Each acceptanc
 
 ## Inputs
 
-| ID | Name | Type | Constraints |
-|----|------|------|-------------|
-| GEN-IN-01 | yaml_file | string | Required. Path to the acceptance-cases.yaml file. |
-| GEN-IN-02 | --output | string | Optional. Write generated code to file instead of stdout. |
-| GEN-IN-03 | --module | string | Optional. Python module to import from. |
-| GEN-IN-04 | --function | string | Optional. Target function name for call stubs. |
-| GEN-IN-05 | --language | string | Optional. `python` (default) or `go`. |
+| Name | Type | Constraints |
+|------|------|-------------|
+| yaml_file | string | Required. Path to the acceptance-cases.yaml file. |
+| --output | string | Optional. Write generated code to file instead of stdout. |
+| --module | string | Optional. Python module to import from. |
+| --function | string | Optional. Target function name for call stubs. |
+| --language | string | Optional. `python` (default) or `go`. |
 
 ## Outputs
 
-| ID | Name | Type |
-|----|------|------|
-| GEN-OUT-01 | generated_code | text | Test skeleton code printed to stdout or written to file. |
-| GEN-OUT-02 | exit_code | integer | 0 on success; 1 on error. |
+| Name | Type | Description |
+|------|------|-------------|
+| generated_code | text | Test skeleton code printed to stdout or written to file. |
+| exit_code | integer | 0 on success; 1 on error. |
 
 ## Behavioral Scenarios
 

@@ -159,6 +159,22 @@ acceptance_cases:
       exit_code: 0
       spec_found: "REQ-123"
 
+  # --- Multi-segment IDs ---
+
+  - name: default pattern matches multi-segment spec IDs
+    spec_id: TR-14
+    given:
+      spec_files:
+        - content: "| FP-INV-01 | invariant rule |\n| FP-FAIL-01 | failure condition |"
+      test_files:
+        - name: "test_feature.py"
+          content: "FP-INV-01 FP-FAIL-01"
+    when:
+      action: validate_traceability
+    then:
+      spec_found: "FP-INV-01"
+      spec_found_alt: "FP-FAIL-01"
+
   # --- Reporting ---
 
   - name: report shows covered and missing counts

@@ -124,10 +124,22 @@ def test_nfr_file_skipped_when_absent(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_missing_directory_warns_but_continues(tmp_path, capsys):
-    """FP-07: A nonexistent directory produces a warning, not a crash."""
+    """FP-07 / FP-FAIL-01: A nonexistent spec_dir produces a warning, not a crash."""
     test_dir = _make_tree(tmp_path, "tests", {"test.py": "pass"})
 
     fp = compute_fingerprint(str(tmp_path / "no_such_dir"), test_dir)
+
+    assert isinstance(fp, str)
+    assert len(fp) == 64
+    captured = capsys.readouterr()
+    assert "Warning" in captured.err
+
+
+def test_missing_test_directory_warns_but_continues(tmp_path, capsys):
+    """FP-07 / FP-FAIL-02: A nonexistent test_dir produces a warning, not a crash."""
+    spec_dir = _make_tree(tmp_path, "specs", {"spec.md": "# Spec"})
+
+    fp = compute_fingerprint(spec_dir, str(tmp_path / "no_such_test_dir"))
 
     assert isinstance(fp, str)
     assert len(fp) == 64
@@ -218,12 +230,13 @@ def test_compare_matches(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_compare_detects_mismatch(tmp_path, monkeypatch):
-    """FP-10: --compare exits 1 when stored fingerprint does not match."""
+    """FP-10 / FP-FAIL-03: --compare exits 1, MISMATCH and both hashes printed to stderr."""
     spec_dir = _make_tree(tmp_path, "specs", {"spec.md": "# Spec"})
     test_dir = _make_tree(tmp_path, "tests", {"test.py": "pass"})
 
     monkeypatch.chdir(tmp_path)
-    (tmp_path / ".fingerprint").write_text("0000000000000000000000000000000000000000000000000000000000000000\n")
+    stored_hash = "0000000000000000000000000000000000000000000000000000000000000000"
+    (tmp_path / ".fingerprint").write_text(stored_hash + "\n")
 
     result = subprocess.run(
         [sys.executable, TOOL, "--spec-dir", spec_dir, "--test-dir", test_dir, "--compare"],
@@ -232,6 +245,8 @@ def test_compare_detects_mismatch(tmp_path, monkeypatch):
 
     assert result.returncode == 1
     assert "MISMATCH" in result.stderr
+    assert stored_hash in result.stderr  # stored hash printed
+    assert "Current:" in result.stderr  # current hash labeled
 
 
 # ---------------------------------------------------------------------------

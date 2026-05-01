@@ -1,6 +1,6 @@
 # Feature: Traceability Validation
 
-Version: 1.0
+Version: 1.1
 Type: behavioral
 Status: ACTIVE
 
@@ -10,18 +10,18 @@ Validates that every specification ID found in markdown files has at least one c
 
 ## Inputs
 
-| ID | Name | Type | Constraints |
-|----|------|------|-------------|
-| TR-IN-01 | spec_dir | string | Required, repeatable. Path(s) to specification directories. |
-| TR-IN-02 | test_dir | string | Required. Path to the test directory. |
-| TR-IN-03 | --spec-pattern | string | Optional. Regex pattern for spec IDs. Default: `\w+-\d+`. |
+| Name | Type | Constraints |
+|------|------|-------------|
+| spec_dir | string | Required, repeatable. Path(s) to specification directories. |
+| test_dir | string | Required. Path to the test directory. |
+| --spec-pattern | string | Optional. Regex pattern for spec IDs. Default: `\w+(?:-\w+)*-\d+`. |
 
 ## Outputs
 
-| ID | Name | Type |
-|----|------|------|
-| TR-OUT-01 | coverage_report | text | Printed to stdout: counts of found, covered, and missing spec IDs. |
-| TR-OUT-02 | exit_code | integer | 0 when all specs are covered; 1 when any spec lacks a test. |
+| Name | Type | Description |
+|------|------|-------------|
+| coverage_report | text | Printed to stdout: counts of found, covered, and missing spec IDs. |
+| exit_code | integer | 0 when all specs are covered; 1 when any spec lacks a test. |
 
 ## Behavioral Scenarios
 
@@ -60,8 +60,9 @@ Validates that every specification ID found in markdown files has at least one c
 | TR-09 | Exits 1 immediately if any spec_dir does not exist. |
 | TR-10 | Exits 1 immediately if test_dir does not exist. |
 | TR-11 | Multiple --spec-dir values are accepted and all are scanned. |
-| TR-12 | A custom --spec-pattern overrides the default `\w+-\d+` regex for ID detection. |
+| TR-12 | A custom --spec-pattern overrides the default `\w+(?:-\w+)*-\d+` regex for ID detection. |
 | TR-13 | Reports total spec count, covered count, and missing count to stdout. |
+| TR-14 | The default spec ID pattern matches multi-segment IDs of the form `\w+(?:-\w+)*-\d+`, permitting IDs such as `FEAT-01`, `FP-INV-01`, `FP-FAIL-01`, or `X-Y-Z-01`. |
 
 ## Invariants
 
@@ -83,7 +84,7 @@ Validates that every specification ID found in markdown files has at least one c
 
 - Uses only Python standard library (re, pathlib, argparse).
 - Test file detection is filename-based, not content-based.
-- Default spec ID pattern is `\w+-\d+` (word characters, hyphen, digits).
+- Default spec ID pattern is `\w+(?:-\w+)*-\d+` (word characters, then zero or more hyphenated word segments, ending in hyphen + digits). This permits multi-segment IDs (e.g., `FP-INV-01`, `FP-FAIL-01`) without requiring a custom pattern.
 
 ## Acceptance Cases
 

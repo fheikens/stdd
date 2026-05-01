@@ -12,7 +12,9 @@ detected using the pattern WORD-NUMBER in the following locations:
   - Markdown headings:     ## ... WORD-NUMBER ...
   - Code fence comments:   # WORD-NUMBER   or   // WORD-NUMBER
 
-A custom spec ID pattern can be supplied via --spec-pattern (default: \\w+-\\d+).
+A custom spec ID pattern can be supplied via --spec-pattern (default:
+\\w+(?:-\\w+)*-\\d+, which matches multi-segment IDs like FP-INV-01 and
+FP-FAIL-01 in addition to single-segment IDs like FEAT-01).
 Multiple --spec-dir values are supported to scan several specification trees.
 
 Scans all test files in test-dir for references to those IDs in docstrings,
@@ -28,7 +30,7 @@ import pathlib
 import re
 import sys
 
-DEFAULT_SPEC_ID_PATTERN = r"\w+-\d+"
+DEFAULT_SPEC_ID_PATTERN = r"\w+(?:-\w+)*-\d+"
 TEST_FILE_PATTERNS = ["test_*.py", "*_test.py", "*_test.go", "test_*.go"]
 
 
