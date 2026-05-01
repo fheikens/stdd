@@ -3,7 +3,7 @@
 ## Writing Specifications That AI Gets Right on the First Attempt
 
 Author: Frank Heikens
-Version: 1.0
+Version: 1.1
 Date: 2026
 
 ---

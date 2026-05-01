@@ -1,3 +1,51 @@
+# STDD v0.3 — Tightened Coverage Rules
+
+## What changed in v0.3
+
+STDD v0.3 strengthens the traceability rules so a requirement cannot be marked COVERED on the strength of helper-level tests, plausible reasoning, or implementation inspection. The motivation is brownfield and forked projects, where AI agents have been observed promoting unit-level evidence to system-level COVERED claims that the system did not actually provide.
+
+### Core Model
+
+- **Rule 1 (revised)** — the test must verify the same observable behavior on the same surface the requirement names. Helper-level evidence does not satisfy a system-level requirement.
+- **Rule 8 (new)** — multi-channel requirements need evidence per channel. A requirement that constrains both an HTTP API and a CLI is not COVERED until both channels have tests.
+- **Rule 9 (new)** — when in doubt, downgrade. The default classification is PARTIALLY COVERED, not COVERED.
+- **§6.4 (new)** — strict definitions of COVERED, PARTIALLY COVERED, and UNCOVERED, with a required evidence block (test file, test name, behavior verified, surface verified) on every COVERED row.
+- **§6.5 (new)** — AI-agent coverage discipline as a binding directive.
+- **§6.6 (new)** — brownfield and fork classification: every divergence from upstream is compatibility-preserving, intentional breaking, security hardening, migration risk, or implementation-only. Compatibility requires test evidence and is never inferred from internal similarity.
+
+### Adoption Guide
+
+- **§7 (new)** — forks-and-divergence subsection applying the brownfield classification to the migration workflow.
+
+### Templates
+
+- **traceability-matrix.md** — stricter format with worked examples of COVERED and PARTIALLY COVERED rows, including the evidence block.
+
+### Prompt Engineering
+
+- **§8.6 (new)** — anti-pattern: promoting coverage without test evidence.
+- **§13 (new)** — directive section for AI agents on coverage discipline.
+
+### Anti-Patterns
+
+- **§13 (new)** — Overclaiming Coverage: traceability inflation, helper-level proof, multi-channel coverage gaps, fork compatibility without corpus evidence, security guarantees without channel-level tests.
+
+## Why this matters
+
+Traceability is only useful if COVERED actually means covered. Without strict rules, a 100% coverage claim becomes meaningless — and for AI-driven development, where agents generate the matrix, the failure mode is systematic, not occasional. v0.3 makes the rules tight enough that the matrix can be trusted as evidence rather than narrative.
+
+## Compatibility
+
+Documentation only. The `.fingerprint` is unchanged because no spec or test under `features/` or `tests/` changed. Existing traceability matrices remain valid but should be reviewed against the stricter §6.4 definitions; rows lacking an evidence block should be downgraded to PARTIALLY COVERED until evidence is added.
+
+## License
+
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Author: Frank Heikens
+
+---
+
 # STDD v0.2 — Validated on a Real System
 
 ## What is STDD?

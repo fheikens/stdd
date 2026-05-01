@@ -2,7 +2,7 @@
 ## Specification Taxonomy, Test Taxonomy, Artifact Lifecycle, Execution Flows, and Traceability
 
 Author: Frank Heikens
-Version: 1.0
+Version: 1.1
 Date: 2026
 
 ---

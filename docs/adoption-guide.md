@@ -3,7 +3,7 @@
 ## A Migration Guide for Existing Teams
 
 Author: Frank Heikens
-Version: 1.1
+Version: 1.2
 Date: 2026
 
 ---
